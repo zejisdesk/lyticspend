@@ -5,9 +5,33 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+/* Prevent zoom on input focus for mobile devices */
+input, select, textarea, button {
+  font-size: 16px; /* Prevents iOS zoom on focus */
+  touch-action: manipulation;
+}
+
+/* Additional mobile optimizations */
+@media screen and (max-width: 768px) {
+  * {
+    touch-action: manipulation;
+  }
+  
+  /* Prevent text selection on double tap */
+  .no-select {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
 }

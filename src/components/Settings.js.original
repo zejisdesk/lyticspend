@@ -1,0 +1,512 @@
+import React, { useState, useEffect, useCallback } from 'react';
+import { useCurrency } from '../context/CurrencyContext';
+import { useBudget } from '../context/BudgetContext';
+import { useCategories } from '../context/CategoryContext';
+import CategoryManagementModal from './CategoryManagementModal';
+import IconDropdown from './IconDropdown';
+
+const Settings = () => {
+  const [darkMode, setDarkMode] = useState(false);
+  const [notifications, setNotifications] = useState(false);
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [showExpenseCategoryModal, setShowExpenseCategoryModal] = useState(false);
+  const [showIncomeCategoryModal, setShowIncomeCategoryModal] = useState(false);
+  const [categoryType, setCategoryType] = useState('expense'); // 'expense' or 'income'
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredCurrencies, setFilteredCurrencies] = useState([]);
+  const [filteredCategories, setFilteredCategories] = useState([]);
+  const [categorySearchQuery, setCategorySearchQuery] = useState('');
+  const [budgetInput, setBudgetInput] = useState('');
+  const [editingCategory, setEditingCategory] = useState(null);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryIcon, setNewCategoryIcon] = useState('fa-tag');
+  const { currency, updateCurrency, currencies } = useCurrency();
+  const { monthlyBudget, updateMonthlyBudget } = useBudget();
+  const { expenseCategories, incomeCategories, addCategory, updateCategory, removeCategory, resetCategories } = useCategories();
+  
+  // Handler for selecting a currency
+  const handleCurrencySelect = (currencyCode) => {
+    updateCurrency(currencyCode);
+    setShowCurrencyModal(false);
+    setSearchQuery('');
+  };
+  
+  // Handler for updating monthly budget
+  const handleBudgetUpdate = () => {
+    const budgetValue = parseFloat(budgetInput);
+    if (!isNaN(budgetValue) && budgetValue >= 0) {
+      updateMonthlyBudget(budgetValue);
+      setShowBudgetModal(false);
+    }
+  };
+  
+  // Filter categories based on search query
+  const filterCategories = useCallback(() => {
+    const categories = categoryType === 'expense' ? expenseCategories : incomeCategories;
+    if (!categorySearchQuery) {
+      setFilteredCategories(categories);
+      return;
+    }
+    
+    const query = categorySearchQuery.toLowerCase();
+    const filtered = categories.filter(category => 
+      category.name.toLowerCase().includes(query)
+    );
+    
+    setFilteredCategories(filtered);
+  }, [categoryType, expenseCategories, incomeCategories, categorySearchQuery]);
+  
+  // Initialize budget input when modal opens
+  useEffect(() => {
+    if (showBudgetModal) {
+      setBudgetInput(monthlyBudget !== null ? monthlyBudget.toString() : '');
+    }
+  }, [showBudgetModal, monthlyBudget]);
+  
+  // Initialize category filtering
+  useEffect(() => {
+    if (showExpenseCategoryModal) {
+      setCategoryType('expense');
+      filterCategories();
+    } else if (showIncomeCategoryModal) {
+      setCategoryType('income');
+      filterCategories();
+    }
+  }, [showExpenseCategoryModal, showIncomeCategoryModal, categorySearchQuery, expenseCategories, incomeCategories, filterCategories]);
+  
+  // Handle adding a new category
+  const handleAddCategory = () => {
+    if (!newCategoryName.trim()) return;
+    
+    const newCategory = {
+      name: newCategoryName.trim(),
+      icon: newCategoryIcon
+    };
+    
+    addCategory(categoryType, newCategory);
+    setNewCategoryName('');
+    setNewCategoryIcon('fa-tag');
+    setEditingCategory(null);
+  };
+  
+  // Handle updating a category
+  const handleUpdateCategory = () => {
+    if (!editingCategory || !newCategoryName.trim()) return;
+    
+    const updatedCategory = {
+      name: newCategoryName.trim(),
+      icon: newCategoryIcon
+    };
+    
+    updateCategory(categoryType, editingCategory.id, updatedCategory);
+    setNewCategoryName('');
+    setNewCategoryIcon('fa-tag');
+    setEditingCategory(null);
+  };
+  
+  // Handle removing a category
+  const handleRemoveCategory = (categoryId) => {
+    removeCategory(categoryType, categoryId);
+  };
+  
+  // Handle editing a category
+  const handleEditCategory = (category) => {
+    setEditingCategory(category);
+    setNewCategoryName(category.name);
+    setNewCategoryIcon(category.icon);
+  };
+  
+  // Handle canceling category edit
+  const handleCancelEdit = () => {
+    setEditingCategory(null);
+    setNewCategoryName('');
+    setNewCategoryIcon('fa-tag');
+  };
+  
+  // Initialize filteredCurrencies when component mounts, sorted alphabetically by currency name
+  useEffect(() => {
+    const sortedCurrencies = Object.keys(currencies).sort((a, b) => 
+      currencies[a].name.localeCompare(currencies[b].name)
+    );
+    setFilteredCurrencies(sortedCurrencies);
+  }, [currencies]);
+  
+  // Filter currencies based on search query
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      const sortedCurrencies = Object.keys(currencies).sort((a, b) => 
+        currencies[a].name.localeCompare(currencies[b].name)
+      );
+      setFilteredCurrencies(sortedCurrencies);
+    } else {
+      const query = searchQuery.toLowerCase();
+      const filtered = Object.keys(currencies).filter(code => {
+        const currencyData = currencies[code];
+        return (
+          code.toLowerCase().includes(query) ||
+          currencyData.name.toLowerCase().includes(query) ||
+          currencyData.symbol.toLowerCase().includes(query)
+        );
+      });
+      // Sort the filtered results alphabetically by name
+      filtered.sort((a, b) => currencies[a].name.localeCompare(currencies[b].name));
+      setFilteredCurrencies(filtered);
+    }
+  }, [searchQuery, currencies]);
+
+  return (
+    <div className="settings-container">
+      {/* Appearance Section */}
+      <div className="settings-section-header">APPEARANCE</div>
+      
+      <div className="settings-section">
+        <div className="settings-item">
+          <div className="settings-item-left">
+            <div className="settings-icon">
+              <i className="fas fa-moon" style={{ color: '#0D6EFD' }}></i>
+            </div>
+            <div className="settings-label">Dark Mode</div>
+          </div>
+          <div className="settings-item-right">
+            <label className="toggle-switch">
+              <input 
+                type="checkbox" 
+                checked={darkMode}
+                onChange={() => setDarkMode(!darkMode)}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+      
+      {/* General Section */}
+      <div className="settings-section-header">GENERAL</div>
+      
+      <div className="settings-section">
+        <div className="settings-item" onClick={() => setShowCurrencyModal(true)}>
+          <div className="settings-item-left">
+            <div className="settings-icon">
+              <i className="fas fa-money-bill-wave" style={{ color: '#0D6EFD' }}></i>
+            </div>
+            <div className="settings-label">Currency</div>
+          </div>
+          <div className="settings-item-right settings-value-with-arrow">
+            <div className="settings-value">{currency.code}</div>
+            <i className="fas fa-chevron-right"></i>
+          </div>
+        </div>
+        
+        <div className="settings-item" onClick={() => setShowBudgetModal(true)}>
+          <div className="settings-item-left">
+            <div className="settings-icon">
+              <i className="fas fa-wallet" style={{ color: '#0D6EFD' }}></i>
+            </div>
+            <div className="settings-label">Monthly Budget</div>
+          </div>
+          <div className="settings-item-right settings-value-with-arrow">
+            <div className="settings-value">
+              {monthlyBudget !== null 
+                ? `${currency.symbol}${monthlyBudget.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
+                : 'Not set'}
+            </div>
+            <i className="fas fa-chevron-right"></i>
+          </div>
+        </div>
+      </div>
+      
+      {/* Notifications Section */}
+      <div className="settings-section-header">NOTIFICATIONS</div>
+      
+      <div className="settings-section">
+        <div className="settings-item">
+          <div className="settings-item-left">
+            <div className="settings-icon">
+              <i className="fas fa-bell" style={{ color: '#0D6EFD' }}></i>
+            </div>
+            <div className="settings-label">Enable Notifications</div>
+          </div>
+          <div className="settings-item-right">
+            <label className="toggle-switch">
+              <input 
+                type="checkbox" 
+                checked={notifications}
+                onChange={() => setNotifications(!notifications)}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
+        </div>
+        
+        <div className="settings-item">
+          <div className="settings-item-left">
+            <div className="settings-icon">
+              <i className="fas fa-clock" style={{ color: '#0D6EFD' }}></i>
+            </div>
+            <div className="settings-label">Reminder 1</div>
+          </div>
+          <div className="settings-item-right settings-value-with-arrow">
+            <div className="settings-value">9:00 AM</div>
+            <i className="fas fa-chevron-right"></i>
+          </div>
+        </div>
+        
+        <div className="settings-item">
+          <div className="settings-item-left">
+            <div className="settings-icon">
+              <i className="fas fa-clock" style={{ color: '#0D6EFD' }}></i>
+            </div>
+            <div className="settings-label">Reminder 2</div>
+          </div>
+          <div className="settings-item-right settings-value-with-arrow">
+            <div className="settings-value">9:00 AM</div>
+            <i className="fas fa-chevron-right"></i>
+          </div>
+        </div>
+        
+        <div className="settings-item">
+          <div className="settings-item-left">
+            <div className="settings-icon">
+              <i className="fas fa-clock" style={{ color: '#0D6EFD' }}></i>
+            </div>
+            <div className="settings-label">Reminder 3</div>
+          </div>
+          <div className="settings-item-right settings-value-with-arrow">
+            <div className="settings-value">9:00 AM</div>
+            <i className="fas fa-chevron-right"></i>
+          </div>
+        </div>
+      </div>
+      
+      {/* Categories Section */}
+      <div className="settings-section-header">CATEGORIES</div>
+      
+      <div className="settings-section">
+        <div className="settings-item" onClick={() => {
+          setShowExpenseCategoryModal(true);
+        }}>
+          <div className="settings-item-left">
+            <div className="settings-icon">
+              <i className="fas fa-list" style={{ color: '#0D6EFD' }}></i>
+            </div>
+            <div className="settings-label">Manage Expense Categories</div>
+          </div>
+          <div className="settings-item-right">
+            <i className="fas fa-chevron-right"></i>
+          </div>
+        </div>
+        
+        <div className="settings-item" onClick={() => {
+          setShowIncomeCategoryModal(true);
+        }}>
+          <div className="settings-item-left">
+            <div className="settings-icon">
+              <i className="fas fa-money-bill-wave" style={{ color: '#0D6EFD' }}></i>
+            </div>
+            <div className="settings-label">Manage Income Categories</div>
+          </div>
+          <div className="settings-item-right">
+            <i className="fas fa-chevron-right"></i>
+          </div>
+        </div>
+        
+        <div className="settings-item">
+          <div className="settings-item-left">
+            <div className="settings-icon">
+              <i className="fas fa-credit-card" style={{ color: '#0D6EFD' }}></i>
+            </div>
+            <div className="settings-label">Manage Payment Methods</div>
+          </div>
+          <div className="settings-item-right">
+            <i className="fas fa-chevron-right"></i>
+          </div>
+        </div>
+      </div>
+      
+      {/* App Info */}
+      <div className="app-info">
+        <div className="app-version">LyticSpend v1.0.0</div>
+        <div className="app-copyright"> 2025 LyticSpend</div>
+      </div>
+
+      {/* Currency Selection Modal */}
+      {showCurrencyModal && (
+        <div className="modal-overlay">
+          <div className="modal-content currency-modal">
+            <div className="modal-header">
+              <h3>Select Currency</h3>
+              <button className="close-button" onClick={() => {
+                setShowCurrencyModal(false);
+                setSearchQuery('');
+              }}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="currency-search-container">
+                <div className="currency-search-input-container">
+                  <i className="fas fa-search search-icon"></i>
+                  <input
+                    type="text"
+                    className="currency-search-input"
+                    placeholder="Search currencies..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  {searchQuery && (
+                    <button 
+                      className="clear-search-button"
+                      onClick={() => setSearchQuery('')}
+                    >
+                      <i className="fas fa-times"></i>
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="currency-list">
+                {filteredCurrencies.length > 0 ? (
+                  filteredCurrencies.map((code) => (
+                    <div 
+                      key={code} 
+                      className={`currency-item ${currency.code === code ? 'selected' : ''}`}
+                      onClick={() => handleCurrencySelect(code)}
+                    >
+                      <div className="currency-symbol">{currencies[code].symbol}</div>
+                      <div className="currency-details">
+                        <div className="currency-name">{currencies[code].name}</div>
+                        <div className="currency-code">{code}</div>
+                      </div>
+                      {currency.code === code && (
+                        <div className="currency-selected">
+                          <i className="fas fa-check"></i>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <div className="no-results">No currencies found</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Monthly Budget Modal */}
+      {showBudgetModal && (
+        <div className="modal-overlay">
+          <div className="modal-content budget-modal">
+            <div className="modal-header">
+              <h3>Set Monthly Budget</h3>
+              <button className="close-button" onClick={() => setShowBudgetModal(false)}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="budget-form">
+                <div className="budget-input-container">
+                  <div className="currency-symbol-prefix">{currency.symbol}</div>
+                  <input
+                    type="number"
+                    className="budget-input"
+                    placeholder="Enter monthly budget"
+                    value={budgetInput}
+                    onChange={(e) => setBudgetInput(e.target.value)}
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+                <div className="budget-description">
+                  Set your monthly spending budget to track your expenses against your target.
+                </div>
+                <div className="budget-actions">
+                  <button 
+                    className="cancel-button" 
+                    onClick={() => setShowBudgetModal(false)}
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    className="save-button" 
+                    onClick={handleBudgetUpdate}
+                    disabled={!budgetInput || isNaN(parseFloat(budgetInput)) || parseFloat(budgetInput) < 0}
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Category Management Modals */}
+      <CategoryManagementModal
+        isOpen={showExpenseCategoryModal}
+        onClose={() => setShowExpenseCategoryModal(false)}
+        title="Manage Expense Categories"
+        categories={expenseCategories}
+        categoryType="expense"
+        searchQuery={categorySearchQuery}
+        setSearchQuery={setCategorySearchQuery}
+        editingCategory={editingCategory}
+        setEditingCategory={setEditingCategory}
+        newCategoryName={newCategoryName}
+        setNewCategoryName={setNewCategoryName}
+        newCategoryIcon={newCategoryIcon}
+        setNewCategoryIcon={setNewCategoryIcon}
+        addCategory={addCategory}
+        updateCategory={updateCategory}
+        removeCategory={removeCategory}
+        resetCategories={resetCategories}
+      />
+      
+      <CategoryManagementModal
+        isOpen={showIncomeCategoryModal}
+        onClose={() => setShowIncomeCategoryModal(false)}
+        title="Manage Income Categories"
+        categories={incomeCategories}
+        categoryType="income"
+        searchQuery={categorySearchQuery}
+        setSearchQuery={setCategorySearchQuery}
+        editingCategory={editingCategory}
+        setEditingCategory={setEditingCategory}
+        newCategoryName={newCategoryName}
+        setNewCategoryName={setNewCategoryName}
+        newCategoryIcon={newCategoryIcon}
+        setNewCategoryIcon={setNewCategoryIcon}
+        addCategory={addCategory}
+        updateCategory={updateCategory}
+        removeCategory={removeCategory}
+        resetCategories={resetCategories}
+      />                <div className="category-form-actions">
+                  {editingCategory && (
+                    <button 
+                      className="cancel-button" 
+                      onClick={handleCancelEdit}
+                    >
+                      Cancel
+                    </button>
+                  )}
+                  <button 
+                    className="save-button" 
+                    onClick={editingCategory ? handleUpdateCategory : handleAddCategory}
+                    disabled={!newCategoryName.trim()}
+                  >
+                    {editingCategory ? 'Update' : 'Add'}
+                  </button>
+                </div>
+              </div>
+              
+              {/* Reset Categories Button */}
+              <div className="reset-categories">
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default Settings;
