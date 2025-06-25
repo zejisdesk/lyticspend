@@ -240,6 +240,7 @@ const CategoryManagementModal = ({
                 id="categoryIcon"
                 value={newCategoryIcon}
                 onChange={(e) => setNewCategoryIcon(e.target.value)}
+                showFooter={false}
               />
             </div>
             

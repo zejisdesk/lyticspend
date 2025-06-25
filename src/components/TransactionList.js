@@ -1,7 +1,7 @@
 import React from 'react';
 import TransactionGroup from './TransactionGroup';
 
-const TransactionList = ({ transactions, categoryFilter, paymentMethodFilter, onDeleteTransaction, onEditTransaction }) => {
+const TransactionList = ({ transactions, categoryFilter, paymentMethodFilter, onDeleteTransaction, onEditTransaction, type = 'expense' }) => {
   // Safety check - if transactions is undefined or null, use empty array
   const transactionsArray = Array.isArray(transactions) ? transactions : [];
   
@@ -66,8 +66,12 @@ const TransactionList = ({ transactions, categoryFilter, paymentMethodFilter, on
           />
         ))
       ) : (
-        <div className="no-transactions">
-          <p>No transactions found.</p>
+        <div className="no-transactions-container">
+          <div className="no-transactions">
+            <i className="fas fa-receipt empty-state-icon"></i>
+            <h3>No transactions yet</h3>
+            <p>{type === 'income' ? 'Add your first income' : 'Add your first expense'}</p>
+          </div>
         </div>
       )}
     </div>

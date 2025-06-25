@@ -1,120 +1,126 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  startReminderScheduler, 
+  stopReminderScheduler, 
+  requestNotificationPermission,
+  updateServiceWorkerReminders,
+  sendTestNotification,
+  runNotificationSystemTest
+} from '../services/notificationService';
 import { useCurrency } from '../context/CurrencyContext';
 import { useBudget } from '../context/BudgetContext';
 import { useCategories } from '../context/CategoryContext';
-import IconSelector from './IconSelector';
+import { usePaymentMethods } from '../context/PaymentMethodContext';
+import { useTheme } from '../context/ThemeContext';
+import CategoryManagementModal from './CategoryManagementModal';
+import PaymentMethodManagementModal from './PaymentMethodManagementModal';
+import IconDropdown from './IconDropdown';
 
 const Settings = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleDarkMode } = useTheme();
   const [notifications, setNotifications] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState('default');
+  const [testResults, setTestResults] = useState(null);
+  const [isTestingNotifications, setIsTestingNotifications] = useState(false);
+  const [reminderTimes, setReminderTimes] = useState([
+    { id: 1, time: '13:00', enabled: false, label: '1:00 PM' },
+    { id: 2, time: '18:00', enabled: false, label: '6:00 PM' },
+    { id: 3, time: '21:00', enabled: false, label: '9:00 PM' }
+  ]);
+  
+  // Check notification permission and load saved settings on component mount
+  useEffect(() => {
+    const notificationsEnabled = localStorage.getItem('notifications') === 'true';
+    setNotifications(notificationsEnabled);
+    console.log('Notifications enabled from localStorage:', notificationsEnabled);
+    
+    // Check current notification permission
+    if ('Notification' in window) {
+      const currentPermission = Notification.permission;
+      setNotificationPermission(currentPermission);
+      console.log('Current notification permission:', currentPermission);
+      
+      // Get saved notification preference from localStorage
+      const savedNotificationSetting = localStorage.getItem('notifications') === 'true';
+      
+      // Load saved reminder times if they exist, regardless of notification state
+      const savedReminderTimes = localStorage.getItem('reminderTimes');
+      if (savedReminderTimes) {
+        try {
+          const parsedReminderTimes = JSON.parse(savedReminderTimes);
+          setReminderTimes(parsedReminderTimes);
+          console.log('Loaded reminder times:', parsedReminderTimes);
+        } catch (error) {
+          console.error('Error parsing saved reminder times:', error);
+          // If there's an error, use the default reminder times
+          localStorage.setItem('reminderTimes', JSON.stringify(reminderTimes));
+        }
+      } else {
+        // If no saved reminder times, save the default ones
+        localStorage.setItem('reminderTimes', JSON.stringify(reminderTimes));
+      }
+      
+      // Only enable notifications if permission is granted and it was previously enabled
+      if (currentPermission === 'granted' && savedNotificationSetting) {
+        setNotifications(true);
+        // Start the reminder scheduler if notifications are enabled
+        startReminderScheduler();
+      }
+    }
+    
+    // Clean up by stopping the scheduler when component unmounts
+    return () => {
+      stopReminderScheduler();
+    };
+  }, []);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
   const [showExpenseCategoryModal, setShowExpenseCategoryModal] = useState(false);
   const [showIncomeCategoryModal, setShowIncomeCategoryModal] = useState(false);
+  const [showExpensePaymentMethodModal, setShowExpensePaymentMethodModal] = useState(false);
+  const [showIncomePaymentMethodModal, setShowIncomePaymentMethodModal] = useState(false);
   const [categoryType, setCategoryType] = useState('expense'); // 'expense' or 'income'
+  const [methodType, setMethodType] = useState('expense'); // 'expense' or 'income'
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredCurrencies, setFilteredCurrencies] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [categorySearchQuery, setCategorySearchQuery] = useState('');
+  const [paymentMethodSearchQuery, setPaymentMethodSearchQuery] = useState('');
+  const [budgetInput, setBudgetInput] = useState('');
   const [editingCategory, setEditingCategory] = useState(null);
+  const [editingPaymentMethod, setEditingPaymentMethod] = useState(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryIcon, setNewCategoryIcon] = useState('fa-tag');
-  const [showIconDropdown, setShowIconDropdown] = useState(false);
-  const [iconSearchQuery, setIconSearchQuery] = useState('');
-  const [budgetInput, setBudgetInput] = useState('');
-  
-  // Icon options for the category icon selector
-  const iconOptions = [
-    { value: 'fa-tag', label: 'Tag' },
-    { value: 'fa-home', label: 'Home' },
-    { value: 'fa-utensils', label: 'Food' },
-    { value: 'fa-car', label: 'Transport' },
-    { value: 'fa-film', label: 'Entertainment' },
-    { value: 'fa-shopping-cart', label: 'Shopping' },
-    { value: 'fa-bolt', label: 'Utilities' },
-    { value: 'fa-medkit', label: 'Healthcare' },
-    { value: 'fa-graduation-cap', label: 'Education' },
-    { value: 'fa-money-bill-wave', label: 'Money' },
-    { value: 'fa-laptop', label: 'Technology' },
-    { value: 'fa-gift', label: 'Gift' },
-    { value: 'fa-chart-line', label: 'Investment' },
-    { value: 'fa-briefcase', label: 'Business' },
-    { value: 'fa-building', label: 'Building' },
-    { value: 'fa-plane', label: 'Travel' },
-    { value: 'fa-tshirt', label: 'Clothing' },
-    { value: 'fa-baby', label: 'Children' },
-    { value: 'fa-dog', label: 'Pets' },
-    { value: 'fa-dumbbell', label: 'Fitness' },
-  ];
+  const [newPaymentMethodName, setNewPaymentMethodName] = useState('');
+  const [newPaymentMethodIcon, setNewPaymentMethodIcon] = useState('fa-credit-card');
   const { currency, updateCurrency, currencies } = useCurrency();
   const { monthlyBudget, updateMonthlyBudget } = useBudget();
   const { expenseCategories, incomeCategories, addCategory, updateCategory, removeCategory, resetCategories } = useCategories();
+  const { expensePaymentMethods, incomePaymentMethods, addPaymentMethod, updatePaymentMethod, removePaymentMethod, resetPaymentMethods } = usePaymentMethods();
   
   // Handler for selecting a currency
   const handleCurrencySelect = (currencyCode) => {
     updateCurrency(currencyCode);
     setShowCurrencyModal(false);
-    setSearchQuery('');
   };
   
-  // Handler for updating monthly budget
-  const handleBudgetUpdate = () => {
+  // Handler for updating budget
+  const handleUpdateBudget = () => {
+    if (budgetInput.trim() === '') return;
+    
     const budgetValue = parseFloat(budgetInput);
-    if (!isNaN(budgetValue) && budgetValue >= 0) {
-      updateMonthlyBudget(budgetValue);
-      setShowBudgetModal(false);
-    }
+    if (isNaN(budgetValue) || budgetValue < 0) return;
+    
+    updateMonthlyBudget(budgetValue);
+    setShowBudgetModal(false);
   };
   
-  // Filter categories based on search query and type
-  const filterCategories = useCallback(() => {
-    const categoriesToFilter = categoryType === 'expense' ? expenseCategories : incomeCategories;
-    if (categorySearchQuery.trim() === '') {
-      setFilteredCategories(categoriesToFilter);
-    } else {
-      const query = categorySearchQuery.toLowerCase();
-      const filtered = categoriesToFilter.filter(category => 
-        category.name.toLowerCase().includes(query)
-      );
-      setFilteredCategories(filtered);
-    }
-  }, [categoryType, categorySearchQuery, expenseCategories, incomeCategories]);
-  
-  // Filter icon options based on search query
-  const filteredIconOptions = useMemo(() => {
-    if (iconSearchQuery.trim() === '') {
-      return iconOptions;
-    } else {
-      const query = iconSearchQuery.toLowerCase();
-      return iconOptions.filter(icon => 
-        icon.label.toLowerCase().includes(query)
-      );
-    }
-  }, [iconSearchQuery, iconOptions]);
-  
-  // Initialize budget input when modal opens
-  useEffect(() => {
-    if (showBudgetModal) {
-      setBudgetInput(monthlyBudget !== null ? monthlyBudget.toString() : '');
-    }
-  }, [showBudgetModal, monthlyBudget]);
-  
-  // Initialize category filtering
-  useEffect(() => {
-    if (showExpenseCategoryModal) {
-      setCategoryType('expense');
-      filterCategories();
-    } else if (showIncomeCategoryModal) {
-      setCategoryType('income');
-      filterCategories();
-    }
-  }, [showExpenseCategoryModal, showIncomeCategoryModal, categorySearchQuery, expenseCategories, incomeCategories, filterCategories]);
-  
-  // Handle adding a new category
+  // Handle adding a category
   const handleAddCategory = () => {
     if (!newCategoryName.trim()) return;
     
     const newCategory = {
+      id: Date.now().toString(),
       name: newCategoryName.trim(),
       icon: newCategoryIcon
     };
@@ -122,7 +128,6 @@ const Settings = () => {
     addCategory(categoryType, newCategory);
     setNewCategoryName('');
     setNewCategoryIcon('fa-tag');
-    setEditingCategory(null);
   };
   
   // Handle updating a category
@@ -130,6 +135,7 @@ const Settings = () => {
     if (!editingCategory || !newCategoryName.trim()) return;
     
     const updatedCategory = {
+      ...editingCategory,
       name: newCategoryName.trim(),
       icon: newCategoryIcon
     };
@@ -157,6 +163,134 @@ const Settings = () => {
     setEditingCategory(null);
     setNewCategoryName('');
     setNewCategoryIcon('fa-tag');
+  };
+  
+  // Handle running notification system test
+  const handleRunNotificationTest = async () => {
+    setIsTestingNotifications(true);
+    setTestResults(null);
+    
+    try {
+      const results = await runNotificationSystemTest();
+      setTestResults(results);
+      console.log('Notification test results:', results);
+    } catch (error) {
+      console.error('Error running notification test:', error);
+      setTestResults({ error: error.toString() });
+    } finally {
+      setIsTestingNotifications(false);
+    }
+  };
+  
+  // Handle notification toggle
+  const handleNotificationToggle = async () => {
+    // Check if browser supports notifications
+    if (!('Notification' in window)) {
+      alert('This browser does not support notifications');
+      return;
+    }
+    
+    // If notifications are currently on, turn them off
+    if (notifications) {
+      setNotifications(false);
+      localStorage.setItem('notifications', 'false');
+      stopReminderScheduler();
+      return;
+    }
+    
+    // If notifications are off, try to enable them
+    try {
+      // Request permission using the notification service
+      const permission = await requestNotificationPermission();
+      setNotificationPermission(permission);
+      
+      if (permission === 'granted') {
+        // Permission granted, enable notifications
+        setNotifications(true);
+        localStorage.setItem('notifications', 'true');
+        
+        // Start the scheduler and update Service Worker
+        await startReminderScheduler();
+        await updateServiceWorkerReminders();
+      } else {
+        // Permission denied
+        alert('Notification permission denied. You can change this in your browser settings.');
+        setNotifications(false);
+        localStorage.setItem('notifications', 'false');
+      }
+    } catch (error) {
+      console.error('Error handling notification toggle:', error);
+      setNotifications(false);
+      localStorage.setItem('notifications', 'false');
+    }
+  };
+  
+  // Handle toggling individual reminders
+  const handleReminderToggle = async (reminderId) => {
+    // Allow toggling reminders regardless of notification state
+    // This way users can configure their preferences even before enabling notifications
+    const updatedReminders = reminderTimes.map(reminder => {
+      if (reminder.id === reminderId) {
+        return { ...reminder, enabled: !reminder.enabled };
+      }
+      return reminder;
+    });
+    
+    setReminderTimes(updatedReminders);
+    localStorage.setItem('reminderTimes', JSON.stringify(updatedReminders));
+    
+    // If notifications are enabled, update the Service Worker and restart the scheduler
+    if (notifications && Notification.permission === 'granted') {
+      try {
+        // Update Service Worker with new reminder settings
+        await updateServiceWorkerReminders();
+        
+        // Also restart the fallback scheduler just in case
+        stopReminderScheduler();
+        await startReminderScheduler();
+      } catch (error) {
+        console.error('Error updating reminders in Service Worker:', error);
+      }
+    }
+  };
+  
+  // Handle reminder time change
+  const handleReminderTimeChange = async (id, newTime) => {
+    const updatedReminders = reminderTimes.map(reminder => {
+      if (reminder.id === id) {
+        // Convert time to 12-hour format for display
+        const [hours, minutes] = newTime.split(':');
+        const hour = parseInt(hours, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        const label = `${hour12}:${minutes} ${ampm}`;
+        
+        // Ensure time is in HH:MM format for exact comparison in notification service
+        const formattedHours = hours.padStart(2, '0');
+        const formattedMinutes = minutes.padStart(2, '0');
+        const formattedTime = `${formattedHours}:${formattedMinutes}`;
+        
+        return { ...reminder, time: formattedTime, label };
+      }
+      return reminder;
+    });
+    
+    setReminderTimes(updatedReminders);
+    localStorage.setItem('reminderTimes', JSON.stringify(updatedReminders));
+    
+    // If notifications are enabled, update the Service Worker and restart the scheduler
+    if (notifications && notificationPermission === 'granted') {
+      try {
+        // Update Service Worker with new reminder settings
+        await updateServiceWorkerReminders();
+        
+        // Also restart the fallback scheduler just in case
+        stopReminderScheduler();
+        await startReminderScheduler();
+      } catch (error) {
+        console.error('Error updating reminders in Service Worker:', error);
+      }
+    }
   };
   
   // Initialize filteredCurrencies when component mounts, sorted alphabetically by currency name
@@ -208,7 +342,7 @@ const Settings = () => {
               <input 
                 type="checkbox" 
                 checked={darkMode}
-                onChange={() => setDarkMode(!darkMode)}
+                onChange={toggleDarkMode}
               />
               <span className="toggle-slider"></span>
             </label>
@@ -242,90 +376,163 @@ const Settings = () => {
           </div>
           <div className="settings-item-right settings-value-with-arrow">
             <div className="settings-value">
-              {monthlyBudget !== null 
-                ? `${currency.symbol}${monthlyBudget.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` 
-                : 'Not set'}
+              {currency.symbol}{monthlyBudget !== null ? monthlyBudget.toFixed(2) : '0.00'}
             </div>
             <i className="fas fa-chevron-right"></i>
           </div>
         </div>
       </div>
-      
+
+      <div className="settings-item" onClick={() => setShowBudgetModal(true)}>
+        <div className="settings-item-left">
+          <div className="settings-icon">
+            <i className="fas fa-wallet" style={{ color: '#0D6EFD' }}></i>
+          </div>
+          <div className="settings-label">Monthly Budget</div>
+        </div>
+        <div className="settings-item-right settings-value-with-arrow">
+          <div className="settings-value">
+            {currency.symbol}{monthlyBudget !== null ? monthlyBudget.toFixed(2) : '0.00'}
+          </div>
+          <i className="fas fa-chevron-right"></i>
+        </div>
+      </div>
+    
       {/* Notifications Section */}
       <div className="settings-section-header">NOTIFICATIONS</div>
-      
+    
       <div className="settings-section">
+      <div className="settings-item">
+        <div className="settings-item-left">
+          <div className="settings-label">Notifications</div>
+          <div className="settings-description">Get reminders to record your expenses</div>
+        </div>
+        <div className="settings-item-right">
+          <label className="toggle-switch">
+            <input
+              type="checkbox"
+              checked={notifications}
+              onChange={() => handleNotificationToggle()}
+            />
+            <span className="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+      
+      {/* Test notification button */}
+      {notifications && notificationPermission === 'granted' && (
         <div className="settings-item">
           <div className="settings-item-left">
-            <div className="settings-icon">
-              <i className="fas fa-bell" style={{ color: '#0D6EFD' }}></i>
+            <div className="settings-label">Test Notification</div>
+            <div className="settings-description">Send a test notification immediately</div>
+          </div>
+          <div className="settings-item-right">
+            <button 
+              className="test-notification-button"
+              onClick={() => {
+                const result = sendTestNotification();
+                if (result.success) {
+                  console.log('Test notification sent successfully');
+                } else {
+                  console.error('Failed to send test notification:', result.error);
+                }
+              }}
+            >
+              Send Test
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Diagnostic test button */}
+      {notifications && notificationPermission === 'granted' && (
+        <div className="settings-item">
+          <div className="settings-item-left">
+            <div className="settings-label">Notification System Diagnostic</div>
+            <div className="settings-description">Run a comprehensive test of the notification system</div>
+          </div>
+          <div className="settings-item-right">
+            <button 
+              className="diagnostic-test-button"
+              onClick={handleRunNotificationTest}
+              disabled={isTestingNotifications}
+            >
+              {isTestingNotifications ? 'Running Test...' : 'Run Diagnostic'}
+            </button>
+          </div>
+        </div>
+      )}
+      
+      {/* Test results display */}
+      {testResults && (
+        <div className="settings-item notification-test-results">
+          <div className="settings-item-left">
+            <div className="settings-label">Diagnostic Results</div>
+            <pre style={{ whiteSpace: 'pre-wrap', fontSize: '12px', overflow: 'auto', maxHeight: '300px' }}>
+              {JSON.stringify(testResults, null, 2)}
+            </pre>
+          </div>
+        </div>
+      )}
+      
+      {/* Reminder settings */}
+      <div className="settings-item reminder-settings">
+        <div className="settings-item-left">
+          <div className="settings-label">Daily Reminders {!notifications && '(Notifications Disabled)'}</div>
+        </div>
+      </div>
+      
+      {reminderTimes.map(reminder => (
+        <div className="settings-item reminder-item" key={reminder.id}>
+          <div className="settings-item-left">
+            <div className="reminder-time">
+              <input
+                type="time"
+                value={reminder.time}
+                onChange={(e) => handleReminderTimeChange(reminder.id, e.target.value)}
+                disabled={!reminder.enabled}
+                className={!reminder.enabled ? 'disabled' : ''}
+              />
             </div>
-            <div className="settings-label">Enable Notifications</div>
+            <div className="reminder-label">{reminder.label}</div>
           </div>
           <div className="settings-item-right">
             <label className="toggle-switch">
-              <input 
-                type="checkbox" 
-                checked={notifications}
-                onChange={() => setNotifications(!notifications)}
+              <input
+                type="checkbox"
+                checked={reminder.enabled}
+                onChange={() => handleReminderToggle(reminder.id)}
               />
               <span className="toggle-slider"></span>
             </label>
           </div>
         </div>
-        
+      ))}
+      
+      {!notifications && (
         <div className="settings-item">
           <div className="settings-item-left">
-            <div className="settings-icon">
-              <i className="fas fa-clock" style={{ color: '#0D6EFD' }}></i>
+            <div className="reminder-note">
+              Enable notifications above to receive these reminders
             </div>
-            <div className="settings-label">Reminder 1</div>
-          </div>
-          <div className="settings-item-right settings-value-with-arrow">
-            <div className="settings-value">9:00 AM</div>
-            <i className="fas fa-chevron-right"></i>
           </div>
         </div>
-        
-        <div className="settings-item">
-          <div className="settings-item-left">
-            <div className="settings-icon">
-              <i className="fas fa-clock" style={{ color: '#0D6EFD' }}></i>
-            </div>
-            <div className="settings-label">Reminder 2</div>
-          </div>
-          <div className="settings-item-right settings-value-with-arrow">
-            <div className="settings-value">9:00 AM</div>
-            <i className="fas fa-chevron-right"></i>
-          </div>
-        </div>
-        
-        <div className="settings-item">
-          <div className="settings-item-left">
-            <div className="settings-icon">
-              <i className="fas fa-clock" style={{ color: '#0D6EFD' }}></i>
-            </div>
-            <div className="settings-label">Reminder 3</div>
-          </div>
-          <div className="settings-item-right settings-value-with-arrow">
-            <div className="settings-value">9:00 AM</div>
-            <i className="fas fa-chevron-right"></i>
-          </div>
-        </div>
+      )}
       </div>
       
-      {/* Categories Section */}
-      <div className="settings-section-header">CATEGORIES</div>
+      {/* Expense Section */}
+      <div className="settings-section-header">EXPENSE</div>
       
       <div className="settings-section">
         <div className="settings-item" onClick={() => {
+          setCategoryType('expense');
           setShowExpenseCategoryModal(true);
         }}>
           <div className="settings-item-left">
             <div className="settings-icon">
-              <i className="fas fa-list" style={{ color: '#0D6EFD' }}></i>
+              <i className="fas fa-tags" style={{ color: '#0D6EFD' }}></i>
             </div>
-            <div className="settings-label">Manage Expense Categories</div>
+            <div className="settings-label">Manage Categories</div>
           </div>
           <div className="settings-item-right">
             <i className="fas fa-chevron-right"></i>
@@ -333,20 +540,44 @@ const Settings = () => {
         </div>
         
         <div className="settings-item" onClick={() => {
+          setMethodType('expense');
+          setShowExpensePaymentMethodModal(true);
+        }}>
+          <div className="settings-item-left">
+            <div className="settings-icon">
+              <i className="fas fa-credit-card" style={{ color: '#0D6EFD' }}></i>
+            </div>
+            <div className="settings-label">Manage Payment Methods</div>
+          </div>
+          <div className="settings-item-right">
+            <i className="fas fa-chevron-right"></i>
+          </div>
+        </div>
+      </div>
+
+      {/* Income Section */}
+      <div className="settings-section-header">INCOME</div>
+      
+      <div className="settings-section">
+        <div className="settings-item" onClick={() => {
+          setCategoryType('income');
           setShowIncomeCategoryModal(true);
         }}>
           <div className="settings-item-left">
             <div className="settings-icon">
-              <i className="fas fa-money-bill-wave" style={{ color: '#0D6EFD' }}></i>
+              <i className="fas fa-tags" style={{ color: '#0D6EFD' }}></i>
             </div>
-            <div className="settings-label">Manage Income Categories</div>
+            <div className="settings-label">Manage Categories</div>
           </div>
           <div className="settings-item-right">
             <i className="fas fa-chevron-right"></i>
           </div>
         </div>
         
-        <div className="settings-item">
+        <div className="settings-item" onClick={() => {
+          setMethodType('income');
+          setShowIncomePaymentMethodModal(true);
+        }}>
           <div className="settings-item-left">
             <div className="settings-icon">
               <i className="fas fa-credit-card" style={{ color: '#0D6EFD' }}></i>
@@ -361,10 +592,10 @@ const Settings = () => {
       
       {/* App Info */}
       <div className="app-info">
-        <div className="app-version">LyticSpend v1.0.0</div>
-        <div className="app-copyright"> 2025 LyticSpend</div>
+        <div className="app-name">LyticSpend v1.0.0</div>
+        <div className="app-description">A simple expense tracker to manage your finances</div>
       </div>
-
+      
       {/* Currency Selection Modal */}
       {showCurrencyModal && (
         <div className="modal-overlay">
@@ -389,16 +620,17 @@ const Settings = () => {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
-                  {searchQuery && (
-                    <button 
-                      className="clear-search-button"
-                      onClick={() => setSearchQuery('')}
-                    >
-                      <i className="fas fa-times"></i>
-                    </button>
-                  )}
                 </div>
+                {searchQuery && (
+                  <button 
+                    className="clear-search-button"
+                    onClick={() => setSearchQuery('')}
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                )}
               </div>
+              
               <div className="currency-list">
                 {filteredCurrencies.length > 0 ? (
                   filteredCurrencies.map((code) => (
@@ -408,7 +640,7 @@ const Settings = () => {
                       onClick={() => handleCurrencySelect(code)}
                     >
                       <div className="currency-symbol">{currencies[code].symbol}</div>
-                      <div className="currency-details">
+                      <div className="currency-info">
                         <div className="currency-name">{currencies[code].name}</div>
                         <div className="currency-code">{code}</div>
                       </div>
@@ -439,354 +671,110 @@ const Settings = () => {
               </button>
             </div>
             <div className="modal-body">
-              <div className="budget-form">
-                <div className="budget-input-container">
-                  <div className="currency-symbol-prefix">{currency.symbol}</div>
-                  <input
-                    type="number"
-                    className="budget-input"
-                    placeholder="Enter monthly budget"
-                    value={budgetInput}
-                    onChange={(e) => setBudgetInput(e.target.value)}
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-                <div className="budget-description">
-                  Set your monthly spending budget to track your expenses against your target.
-                </div>
-                <div className="budget-actions">
-                  <button 
-                    className="cancel-button" 
-                    onClick={() => setShowBudgetModal(false)}
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    className="save-button" 
-                    onClick={handleBudgetUpdate}
-                    disabled={!budgetInput || isNaN(parseFloat(budgetInput)) || parseFloat(budgetInput) < 0}
-                  >
-                    Save
-                  </button>
-                </div>
+              <div className="budget-input-container">
+                <div className="budget-currency-symbol">{currency.symbol}</div>
+                <input
+                  type="number"
+                  className="budget-input"
+                  placeholder="Enter budget amount"
+                  value={budgetInput}
+                  onChange={(e) => setBudgetInput(e.target.value)}
+                  autoFocus
+                />
               </div>
+              <button 
+                className="save-budget-button"
+                onClick={handleUpdateBudget}
+                disabled={!budgetInput.trim() || isNaN(parseFloat(budgetInput)) || parseFloat(budgetInput) < 0}
+              >
+                Save
+              </button>
             </div>
           </div>
         </div>
       )}
       
-      {/* Expense Category Management Modal */}
-      {showExpenseCategoryModal && (
-        <div className="modal-overlay">
-          <div className="modal-content category-modal">
-            <div className="modal-header">
-              <h3>Manage Expense Categories</h3>
-              <button className="close-button" onClick={() => {
-                setShowExpenseCategoryModal(false);
-                setCategorySearchQuery('');
-                setEditingCategory(null);
-                setNewCategoryName('');
-              }}>
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            <div className="modal-body">
-              
-              {/* Category Search */}
-              <div className="category-search-container">
-                <div className="category-search-input-container">
-                  <i className="fas fa-search search-icon"></i>
-                  <input
-                    type="text"
-                    className="category-search-input"
-                    placeholder="Search categories..."
-                    value={categorySearchQuery}
-                    onChange={(e) => setCategorySearchQuery(e.target.value)}
-                  />
-                  {categorySearchQuery && (
-                    <button 
-                      className="clear-search-button"
-                      onClick={() => setCategorySearchQuery('')}
-                    >
-                      <i className="fas fa-times"></i>
-                    </button>
-                  )}
-                </div>
-              </div>
-              
-              {/* Category List */}
-              <div className="category-list">
-                {filteredCategories.length > 0 ? (
-                  filteredCategories.map((category) => (
-                    <div 
-                      key={category.id} 
-                      className={`category-item ${editingCategory?.id === category.id ? 'editing' : ''}`}
-                    >
-                      <div className="category-icon-container">
-                        <i className={`fas ${category.icon}`}></i>
-                      </div>
-                      <div className="category-name">{category.name}</div>
-                      <div className="category-actions">
-                        <button 
-                          className="category-edit-button"
-                          onClick={() => handleEditCategory(category)}
-                          title="Edit category"
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button 
-                          className="category-delete-button"
-                          onClick={() => handleRemoveCategory(category.id)}
-                          title="Delete category"
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="no-results">No categories found</div>
-                )}
-              </div>
-              
-              {/* Add/Edit Category Form */}
-              <div className="category-form">
-                <h4>{editingCategory ? 'Edit Category' : 'Add New Category'}</h4>
-                <div className="category-form-inputs">
-                  <div className="category-name-input">
-                    <label htmlFor="categoryName">Name</label>
-                    <input
-                      id="categoryName"
-                      type="text"
-                      value={newCategoryName}
-                      onChange={(e) => setNewCategoryName(e.target.value)}
-                      placeholder="Category name"
-                    />
-                  </div>
-                  
-                  <div className="category-icon-input">
-                    <label htmlFor="categoryIcon">Icon</label>
-                    <select
-                      id="categoryIcon"
-                      value={newCategoryIcon}
-                      onChange={(e) => setNewCategoryIcon(e.target.value)}
-                    >
-                      <option value="fa-tag">Tag</option>
-                      <option value="fa-home">Home</option>
-                      <option value="fa-utensils">Food</option>
-                      <option value="fa-car">Transport</option>
-                      <option value="fa-film">Entertainment</option>
-                      <option value="fa-shopping-cart">Shopping</option>
-                      <option value="fa-bolt">Utilities</option>
-                      <option value="fa-medkit">Healthcare</option>
-                      <option value="fa-graduation-cap">Education</option>
-                      <option value="fa-money-bill-wave">Money</option>
-                      <option value="fa-laptop">Technology</option>
-                      <option value="fa-gift">Gift</option>
-                      <option value="fa-chart-line">Investment</option>
-                      <option value="fa-briefcase">Business</option>
-                      <option value="fa-building">Building</option>
-                      <option value="fa-plane">Travel</option>
-                      <option value="fa-tshirt">Clothing</option>
-                      <option value="fa-baby">Children</option>
-                      <option value="fa-dog">Pets</option>
-                      <option value="fa-dumbbell">Fitness</option>
-                    </select>
-                    <div className="selected-icon-preview">
-                      <i className={`fas ${newCategoryIcon}`}></i>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="category-form-actions">
-                  {editingCategory && (
-                    <button 
-                      className="cancel-button" 
-                      onClick={handleCancelEdit}
-                    >
-                      Cancel
-                    </button>
-                  )}
-                  <button 
-                    className="save-button" 
-                    onClick={editingCategory ? handleUpdateCategory : handleAddCategory}
-                    disabled={!newCategoryName.trim()}
-                  >
-                    {editingCategory ? 'Update' : 'Add'}
-                  </button>
-                </div>
-              </div>
-              
-              {/* Reset Categories Button */}
-              <div className="reset-categories">
-                <button 
-                  className="reset-button" 
-                  onClick={() => resetCategories(categoryType)}
-                >
-                  Reset to Default Categories
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Category Management Modals */}
+      <CategoryManagementModal
+        isOpen={showExpenseCategoryModal}
+        onClose={() => setShowExpenseCategoryModal(false)}
+        title="Manage Expense Categories"
+        categories={expenseCategories}
+        categoryType="expense"
+        searchQuery={categorySearchQuery}
+        setSearchQuery={setCategorySearchQuery}
+        editingCategory={editingCategory}
+        setEditingCategory={setEditingCategory}
+        newCategoryName={newCategoryName}
+        setNewCategoryName={setNewCategoryName}
+        newCategoryIcon={newCategoryIcon}
+        setNewCategoryIcon={setNewCategoryIcon}
+        addCategory={addCategory}
+        updateCategory={updateCategory}
+        removeCategory={removeCategory}
+        resetCategories={resetCategories}
+      />
       
-      {/* Income Category Management Modal */}
-      {showIncomeCategoryModal && (
-        <div className="modal-overlay">
-          <div className="modal-content category-modal">
-            <div className="modal-header">
-              <h3>Manage Income Categories</h3>
-              <button className="close-button" onClick={() => {
-                setShowIncomeCategoryModal(false);
-                setCategorySearchQuery('');
-                setEditingCategory(null);
-                setNewCategoryName('');
-              }}>
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-            <div className="modal-body">
-              
-              {/* Category Search */}
-              <div className="category-search-container">
-                <div className="category-search-input-container">
-                  <i className="fas fa-search search-icon"></i>
-                  <input
-                    type="text"
-                    className="category-search-input"
-                    placeholder="Search categories..."
-                    value={categorySearchQuery}
-                    onChange={(e) => setCategorySearchQuery(e.target.value)}
-                  />
-                  {categorySearchQuery && (
-                    <button 
-                      className="clear-search-button"
-                      onClick={() => setCategorySearchQuery('')}
-                    >
-                      <i className="fas fa-times"></i>
-                    </button>
-                  )}
-                </div>
-              </div>
-              
-              {/* Category List */}
-              <div className="category-list">
-                {filteredCategories.length > 0 ? (
-                  filteredCategories.map((category) => (
-                    <div 
-                      key={category.id} 
-                      className={`category-item ${editingCategory?.id === category.id ? 'editing' : ''}`}
-                    >
-                      <div className="category-icon-container">
-                        <i className={`fas ${category.icon}`}></i>
-                      </div>
-                      <div className="category-name">{category.name}</div>
-                      <div className="category-actions">
-                        <button 
-                          className="category-edit-button"
-                          onClick={() => handleEditCategory(category)}
-                          title="Edit category"
-                        >
-                          <i className="fas fa-edit"></i>
-                        </button>
-                        <button 
-                          className="category-delete-button"
-                          onClick={() => handleRemoveCategory(category.id)}
-                          title="Delete category"
-                        >
-                          <i className="fas fa-trash"></i>
-                        </button>
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="no-results">No categories found</div>
-                )}
-              </div>
-              
-              {/* Add/Edit Category Form */}
-              <div className="category-form">
-                <h4>{editingCategory ? 'Edit Category' : 'Add New Category'}</h4>
-                <div className="category-form-inputs">
-                  <div className="category-name-input">
-                    <label htmlFor="categoryName">Name</label>
-                    <input
-                      id="categoryName"
-                      type="text"
-                      value={newCategoryName}
-                      onChange={(e) => setNewCategoryName(e.target.value)}
-                      placeholder="Category name"
-                    />
-                  </div>
-                  
-                  <div className="category-icon-input">
-                    <label htmlFor="categoryIcon">Icon</label>
-                    <select
-                      id="categoryIcon"
-                      value={newCategoryIcon}
-                      onChange={(e) => setNewCategoryIcon(e.target.value)}
-                    >
-                      <option value="fa-tag">Tag</option>
-                      <option value="fa-home">Home</option>
-                      <option value="fa-utensils">Food</option>
-                      <option value="fa-car">Transport</option>
-                      <option value="fa-film">Entertainment</option>
-                      <option value="fa-shopping-cart">Shopping</option>
-                      <option value="fa-bolt">Utilities</option>
-                      <option value="fa-medkit">Healthcare</option>
-                      <option value="fa-graduation-cap">Education</option>
-                      <option value="fa-money-bill-wave">Money</option>
-                      <option value="fa-laptop">Technology</option>
-                      <option value="fa-gift">Gift</option>
-                      <option value="fa-chart-line">Investment</option>
-                      <option value="fa-briefcase">Business</option>
-                      <option value="fa-building">Building</option>
-                      <option value="fa-plane">Travel</option>
-                      <option value="fa-tshirt">Clothing</option>
-                      <option value="fa-baby">Children</option>
-                      <option value="fa-dog">Pets</option>
-                      <option value="fa-dumbbell">Fitness</option>
-                    </select>
-                    <div className="selected-icon-preview">
-                      <i className={`fas ${newCategoryIcon}`}></i>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="category-form-actions">
-                  {editingCategory && (
-                    <button 
-                      className="cancel-button" 
-                      onClick={handleCancelEdit}
-                    >
-                      Cancel
-                    </button>
-                  )}
-                  <button 
-                    className="save-button" 
-                    onClick={editingCategory ? handleUpdateCategory : handleAddCategory}
-                    disabled={!newCategoryName.trim()}
-                  >
-                    {editingCategory ? 'Update' : 'Add'}
-                  </button>
-                </div>
-              </div>
-              
-              {/* Reset Categories Button */}
-              <div className="reset-categories">
-                <button 
-                  className="reset-button" 
-                  onClick={() => resetCategories(categoryType)}
-                >
-                  Reset to Default Categories
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <CategoryManagementModal
+        isOpen={showIncomeCategoryModal}
+        onClose={() => setShowIncomeCategoryModal(false)}
+        title="Manage Income Categories"
+        categories={incomeCategories}
+        categoryType="income"
+        searchQuery={categorySearchQuery}
+        setSearchQuery={setCategorySearchQuery}
+        editingCategory={editingCategory}
+        setEditingCategory={setEditingCategory}
+        newCategoryName={newCategoryName}
+        setNewCategoryName={setNewCategoryName}
+        newCategoryIcon={newCategoryIcon}
+        setNewCategoryIcon={setNewCategoryIcon}
+        addCategory={addCategory}
+        updateCategory={updateCategory}
+        removeCategory={removeCategory}
+        resetCategories={resetCategories}
+      />
+
+      {/* Payment Method Management Modals */}
+      <PaymentMethodManagementModal
+        isOpen={showExpensePaymentMethodModal}
+        onClose={() => setShowExpensePaymentMethodModal(false)}
+        title="Manage Expense Payment Methods"
+        paymentMethods={expensePaymentMethods}
+        methodType="expense"
+        searchQuery={paymentMethodSearchQuery}
+        setSearchQuery={setPaymentMethodSearchQuery}
+        editingPaymentMethod={editingPaymentMethod}
+        setEditingPaymentMethod={setEditingPaymentMethod}
+        newPaymentMethodName={newPaymentMethodName}
+        setNewPaymentMethodName={setNewPaymentMethodName}
+        newPaymentMethodIcon={newPaymentMethodIcon}
+        setNewPaymentMethodIcon={setNewPaymentMethodIcon}
+        addPaymentMethod={addPaymentMethod}
+        updatePaymentMethod={updatePaymentMethod}
+        removePaymentMethod={removePaymentMethod}
+        resetPaymentMethods={resetPaymentMethods}
+      />
+      
+      <PaymentMethodManagementModal
+        isOpen={showIncomePaymentMethodModal}
+        onClose={() => setShowIncomePaymentMethodModal(false)}
+        title="Manage Income Payment Methods"
+        paymentMethods={incomePaymentMethods}
+        methodType="income"
+        searchQuery={paymentMethodSearchQuery}
+        setSearchQuery={setPaymentMethodSearchQuery}
+        editingPaymentMethod={editingPaymentMethod}
+        setEditingPaymentMethod={setEditingPaymentMethod}
+        newPaymentMethodName={newPaymentMethodName}
+        setNewPaymentMethodName={setNewPaymentMethodName}
+        newPaymentMethodIcon={newPaymentMethodIcon}
+        setNewPaymentMethodIcon={setNewPaymentMethodIcon}
+        addPaymentMethod={addPaymentMethod}
+        updatePaymentMethod={updatePaymentMethod}
+        removePaymentMethod={removePaymentMethod}
+        resetPaymentMethods={resetPaymentMethods}
+      />
     </div>
   );
 };

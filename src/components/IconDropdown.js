@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 // This component is designed to be a drop-in replacement for the standard select
 // It can be used with the same props as a standard select
 const IconDropdown = (props) => {
   // Extract props that would be passed to a standard select
-  const { id, value, onChange, className, style } = props;
+  const { id, value, onChange, className, style, showFooter = true } = props;
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
@@ -254,6 +254,18 @@ const IconDropdown = (props) => {
               <div className="custom-dropdown-no-results">No icons found</div>
             )}
           </div>
+          {showFooter && (
+            <div 
+              className="custom-dropdown-footer" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(false);
+                window.location.href = '#/settings';
+              }}
+            >
+              Go to <span className="settings-link">settings</span> to customize
+            </div>
+          )}
         </div>
       )}
       

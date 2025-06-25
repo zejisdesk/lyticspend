@@ -1,15 +1,75 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { 
+  startReminderScheduler, 
+  stopReminderScheduler, 
+  requestNotificationPermission,
+  updateServiceWorkerReminders
+} from '../services/notificationService';
 import { useCurrency } from '../context/CurrencyContext';
 import { useBudget } from '../context/BudgetContext';
 import { useCategories } from '../context/CategoryContext';
 import { usePaymentMethods } from '../context/PaymentMethodContext';
+import { useTheme } from '../context/ThemeContext';
 import CategoryManagementModal from './CategoryManagementModal';
 import PaymentMethodManagementModal from './PaymentMethodManagementModal';
 import IconDropdown from './IconDropdown';
 
 const Settings = () => {
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleDarkMode } = useTheme();
   const [notifications, setNotifications] = useState(false);
+  const [notificationPermission, setNotificationPermission] = useState('default');
+  // Test-related state variables removed
+  const [reminderTimes, setReminderTimes] = useState([
+    { id: 1, time: '13:00', enabled: false, label: '1:00 PM' },
+    { id: 2, time: '18:00', enabled: false, label: '6:00 PM' },
+    { id: 3, time: '21:00', enabled: false, label: '9:00 PM' }
+  ]);
+  
+  // Check notification permission and load saved settings on component mount
+  useEffect(() => {
+    const notificationsEnabled = localStorage.getItem('notifications') === 'true';
+    setNotifications(notificationsEnabled);
+    console.log('Notifications enabled from localStorage:', notificationsEnabled);
+    
+    // Check current notification permission
+    if ('Notification' in window) {
+      const currentPermission = Notification.permission;
+      setNotificationPermission(currentPermission);
+      console.log('Current notification permission:', currentPermission);
+      
+      // Get saved notification preference from localStorage
+      const savedNotificationSetting = localStorage.getItem('notifications') === 'true';
+      
+      // Load saved reminder times if they exist, regardless of notification state
+      const savedReminderTimes = localStorage.getItem('reminderTimes');
+      if (savedReminderTimes) {
+        try {
+          const parsedReminderTimes = JSON.parse(savedReminderTimes);
+          setReminderTimes(parsedReminderTimes);
+          console.log('Loaded reminder times:', parsedReminderTimes);
+        } catch (error) {
+          console.error('Error parsing saved reminder times:', error);
+          // If there's an error, use the default reminder times
+          localStorage.setItem('reminderTimes', JSON.stringify(reminderTimes));
+        }
+      } else {
+        // If no saved reminder times, save the default ones
+        localStorage.setItem('reminderTimes', JSON.stringify(reminderTimes));
+      }
+      
+      // Only enable notifications if permission is granted and it was previously enabled
+      if (currentPermission === 'granted' && savedNotificationSetting) {
+        setNotifications(true);
+        // Start the reminder scheduler if notifications are enabled
+        startReminderScheduler();
+      }
+    }
+    
+    // Clean up by stopping the scheduler when component unmounts
+    return () => {
+      stopReminderScheduler();
+    };
+  }, []);
   const [showCurrencyModal, setShowCurrencyModal] = useState(false);
   const [showBudgetModal, setShowBudgetModal] = useState(false);
   const [showExpenseCategoryModal, setShowExpenseCategoryModal] = useState(false);
@@ -102,6 +162,130 @@ const Settings = () => {
     setNewCategoryIcon('fa-tag');
   };
   
+  // Notification test function removed
+  
+  // Handle notification toggle
+  const handleNotificationToggle = async () => {
+    // Check if browser supports notifications
+    if (!('Notification' in window)) {
+      alert('This browser does not support notifications');
+      return;
+    }
+    
+    // If notifications are currently on, turn them off
+    if (notifications) {
+      setNotifications(false);
+      localStorage.setItem('notifications', 'false');
+      stopReminderScheduler();
+      return;
+    }
+    
+    // If notifications are off, try to enable them
+    try {
+      // Request permission using the notification service
+      const permission = await requestNotificationPermission();
+      setNotificationPermission(permission);
+      
+      if (permission === 'granted') {
+        // Permission granted, enable notifications
+        setNotifications(true);
+        localStorage.setItem('notifications', 'true');
+        
+        // Enable at least one reminder if none are enabled
+        const hasEnabledReminder = reminderTimes.some(reminder => reminder.enabled);
+        if (!hasEnabledReminder) {
+          const updatedReminders = [...reminderTimes];
+          // Enable the first reminder by default
+          updatedReminders[0] = { ...updatedReminders[0], enabled: true };
+          setReminderTimes(updatedReminders);
+          localStorage.setItem('reminderTimes', JSON.stringify(updatedReminders));
+          console.log('Enabled default reminder at', updatedReminders[0].label);
+        }
+        
+        // Start the scheduler and update Service Worker
+        await startReminderScheduler();
+        await updateServiceWorkerReminders();
+      } else {
+        // Permission denied
+        alert('Notification permission denied. You can change this in your browser settings.');
+        setNotifications(false);
+        localStorage.setItem('notifications', 'false');
+      }
+    } catch (error) {
+      console.error('Error handling notification toggle:', error);
+      setNotifications(false);
+      localStorage.setItem('notifications', 'false');
+    }
+  };
+  
+  // Handle toggling individual reminders
+  const handleReminderToggle = async (reminderId) => {
+    // Allow toggling reminders regardless of notification state
+    // This way users can configure their preferences even before enabling notifications
+    const updatedReminders = reminderTimes.map(reminder => {
+      if (reminder.id === reminderId) {
+        return { ...reminder, enabled: !reminder.enabled };
+      }
+      return reminder;
+    });
+    
+    setReminderTimes(updatedReminders);
+    localStorage.setItem('reminderTimes', JSON.stringify(updatedReminders));
+    
+    // If notifications are enabled, update the Service Worker and restart the scheduler
+    if (notifications && Notification.permission === 'granted') {
+      try {
+        // Update Service Worker with new reminder settings
+        await updateServiceWorkerReminders();
+        
+        // Also restart the fallback scheduler just in case
+        stopReminderScheduler();
+        await startReminderScheduler();
+      } catch (error) {
+        console.error('Error updating reminders in Service Worker:', error);
+      }
+    }
+  };
+  
+  // Handle reminder time change
+  const handleReminderTimeChange = async (id, newTime) => {
+    const updatedReminders = reminderTimes.map(reminder => {
+      if (reminder.id === id) {
+        // Convert time to 12-hour format for display
+        const [hours, minutes] = newTime.split(':');
+        const hour = parseInt(hours, 10);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const hour12 = hour % 12 || 12;
+        const label = `${hour12}:${minutes} ${ampm}`;
+        
+        // Ensure time is in HH:MM format for exact comparison in notification service
+        const formattedHours = hours.padStart(2, '0');
+        const formattedMinutes = minutes.padStart(2, '0');
+        const formattedTime = `${formattedHours}:${formattedMinutes}`;
+        
+        return { ...reminder, time: formattedTime, label };
+      }
+      return reminder;
+    });
+    
+    setReminderTimes(updatedReminders);
+    localStorage.setItem('reminderTimes', JSON.stringify(updatedReminders));
+    
+    // If notifications are enabled, update the Service Worker and restart the scheduler
+    if (notifications && notificationPermission === 'granted') {
+      try {
+        // Update Service Worker with new reminder settings
+        await updateServiceWorkerReminders();
+        
+        // Also restart the fallback scheduler just in case
+        stopReminderScheduler();
+        await startReminderScheduler();
+      } catch (error) {
+        console.error('Error updating reminders in Service Worker:', error);
+      }
+    }
+  };
+  
   // Initialize filteredCurrencies when component mounts, sorted alphabetically by currency name
   useEffect(() => {
     const sortedCurrencies = Object.keys(currencies).sort((a, b) => 
@@ -151,7 +335,7 @@ const Settings = () => {
               <input 
                 type="checkbox" 
                 checked={darkMode}
-                onChange={() => setDarkMode(!darkMode)}
+                onChange={toggleDarkMode}
               />
               <span className="toggle-slider"></span>
             </label>
@@ -191,72 +375,62 @@ const Settings = () => {
           </div>
         </div>
       </div>
-      
+    
       {/* Notifications Section */}
-      <div className="settings-section-header">NOTIFICATIONS</div>
-      
+      <div className="settings-section-header">
+        <div>NOTIFICATIONS</div>
+        <div className="settings-section-header-description">Set reminders to record your expenses</div>
+      </div>
       <div className="settings-section">
         <div className="settings-item">
           <div className="settings-item-left">
-            <div className="settings-icon">
-              <i className="fas fa-bell" style={{ color: '#0D6EFD' }}></i>
-            </div>
-            <div className="settings-label">Enable Notifications</div>
+            <div className="settings-label">Reminders</div>
           </div>
           <div className="settings-item-right">
             <label className="toggle-switch">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 checked={notifications}
-                onChange={() => setNotifications(!notifications)}
+                onChange={() => handleNotificationToggle()}
               />
               <span className="toggle-slider"></span>
             </label>
           </div>
         </div>
-        
-        <div className="settings-item">
-          <div className="settings-item-left">
-            <div className="settings-icon">
-              <i className="fas fa-clock" style={{ color: '#0D6EFD' }}></i>
+      
+        {/* Reminder settings */}
+        {reminderTimes.map(reminder => (
+          <div className="settings-item reminder-item" key={reminder.id}>
+            <div className="settings-item-left">
+              <div className="reminder-time">
+                <input
+                  type="time"
+                  value={reminder.time}
+                  onChange={(e) => handleReminderTimeChange(reminder.id, e.target.value)}
+                  disabled={!reminder.enabled}
+                  className={!reminder.enabled ? 'disabled' : ''}
+                />
+              </div>
             </div>
-            <div className="settings-label">Reminder 1</div>
-          </div>
-          <div className="settings-item-right settings-value-with-arrow">
-            <div className="settings-value">9:00 AM</div>
-            <i className="fas fa-chevron-right"></i>
-          </div>
-        </div>
-        
-        <div className="settings-item">
-          <div className="settings-item-left">
-            <div className="settings-icon">
-              <i className="fas fa-clock" style={{ color: '#0D6EFD' }}></i>
+            <div className="settings-item-right">
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={reminder.enabled}
+                  onChange={() => handleReminderToggle(reminder.id)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
             </div>
-            <div className="settings-label">Reminder 2</div>
           </div>
-          <div className="settings-item-right settings-value-with-arrow">
-            <div className="settings-value">9:00 AM</div>
-            <i className="fas fa-chevron-right"></i>
-          </div>
-        </div>
-        
-        <div className="settings-item">
-          <div className="settings-item-left">
-            <div className="settings-icon">
-              <i className="fas fa-clock" style={{ color: '#0D6EFD' }}></i>
-            </div>
-            <div className="settings-label">Reminder 3</div>
-          </div>
-          <div className="settings-item-right settings-value-with-arrow">
-            <div className="settings-value">9:00 AM</div>
-            <i className="fas fa-chevron-right"></i>
-          </div>
-        </div>
+        ))}
       </div>
       
       {/* Expense Section */}
-      <div className="settings-section-header">EXPENSE</div>
+      <div className="settings-section-header">
+        <div>EXPENSE</div>
+        <div className="settings-section-header-description">Customize the category and payment method lists used in dropdowns</div>
+      </div>
       
       <div className="settings-section">
         <div className="settings-item" onClick={() => {
@@ -291,7 +465,10 @@ const Settings = () => {
       </div>
 
       {/* Income Section */}
-      <div className="settings-section-header">INCOME</div>
+      <div className="settings-section-header">
+        <div>INCOME</div>
+        <div className="settings-section-header-description">Customize the category and payment method lists used in dropdowns</div>
+      </div>
       
       <div className="settings-section">
         <div className="settings-item" onClick={() => {
@@ -325,6 +502,27 @@ const Settings = () => {
         </div>
       </div>
       
+      {/* Community Section */}
+      <div className="settings-section-header">
+        <div>COMMUNITY</div>
+        <div className="settings-section-header-description">Connect with other LyticSpend users</div>
+      </div>
+      
+      <div className="settings-section">
+        <div className="settings-item" onClick={() => window.open('https://discord.gg/4zQjrgJxep', '_blank')}>
+          <div className="settings-item-left">
+            <div className="settings-icon">
+              <i className="fab fa-discord" style={{ color: '#0D6EFD' }}></i>
+            </div>
+            <div className="settings-label">Join the Discussion</div>
+            {/* <div className="settings-description">Connect with our community on Discord</div> */}
+          </div>
+          <div className="settings-item-right">
+            <i className="fas fa-external-link-alt"></i>
+          </div>
+        </div>
+      </div>
+      
       {/* App Info */}
       <div className="app-info">
         <div className="app-name">LyticSpend v1.0.0</div>
@@ -346,14 +544,16 @@ const Settings = () => {
             </div>
             <div className="modal-body">
               <div className="currency-search-container">
-                <i className="fas fa-search search-icon"></i>
-                <input
-                  type="text"
-                  className="currency-search-input"
-                  placeholder="Search currencies..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                />
+                <div className="currency-search-input-container">
+                  <i className="fas fa-search search-icon"></i>
+                  <input
+                    type="text"
+                    className="currency-search-input"
+                    placeholder="Search currencies..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                </div>
                 {searchQuery && (
                   <button 
                     className="clear-search-button"

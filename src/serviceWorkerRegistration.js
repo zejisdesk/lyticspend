@@ -19,7 +19,8 @@ const isLocalhost = Boolean(
 );
 
 export function register(config) {
-  if (process.env.NODE_ENV === 'production' && 'serviceWorker' in navigator) {
+  // Allow registration in both development and production
+  if ('serviceWorker' in navigator) {
     // The URL constructor is available in all browsers that support SW.
     const publicUrl = new URL(process.env.PUBLIC_URL, window.location.href);
     if (publicUrl.origin !== window.location.origin) {
@@ -53,6 +54,8 @@ export function register(config) {
 }
 
 function registerValidSW(swUrl, config) {
+  console.log('Registering service worker at:', swUrl);
+  
   navigator.serviceWorker
     .register(swUrl)
     .then((registration) => {
@@ -75,6 +78,11 @@ function registerValidSW(swUrl, config) {
               // Execute callback
               if (config && config.onUpdate) {
                 config.onUpdate(registration);
+              }
+              
+              // Force the service worker to activate immediately
+              if (installingWorker && installingWorker.state === 'installed') {
+                installingWorker.postMessage({ type: 'SKIP_WAITING' });
               }
             } else {
               // At this point, everything has been precached.
@@ -109,11 +117,9 @@ function checkValidServiceWorker(swUrl, config) {
         (contentType != null && contentType.indexOf('javascript') === -1)
       ) {
         // No service worker found. Probably a different app. Reload the page.
-        navigator.serviceWorker.ready.then((registration) => {
-          registration.unregister().then(() => {
-            window.location.reload();
-          });
-        });
+        console.log('No service worker found at', swUrl);
+        console.log('Attempting to register anyway for development mode');
+        registerValidSW(swUrl, config);
       } else {
         // Service worker found. Proceed as normal.
         registerValidSW(swUrl, config);

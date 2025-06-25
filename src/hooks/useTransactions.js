@@ -37,54 +37,11 @@ const useTransactions = () => {
     setIsLoaded(true);
   }, []);
   
-  // Load sample data for demonstration
+  // Initialize with empty transactions array
   const loadSampleData = () => {
-    // Use current date for sample data
-    const today = new Date();
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
-    
-    const sampleData = [
-      {
-        id: '1',
-        amount: 45.00,
-        description: 'Grocery Shopping',
-        category: 'Food',
-        paymentMethod: 'Credit Card',
-        type: 'expense',
-        date: '2025-06-24T00:00:00.000Z'
-      },
-      {
-        id: '2',
-        amount: 25.50,
-        description: 'Uber Ride',
-        category: 'Transport',
-        paymentMethod: 'Digital Wallet',
-        type: 'expense',
-        date: '2025-06-24T00:00:00.000Z'
-      },
-      {
-        id: '3',
-        amount: 15.00,
-        description: 'Movie Ticket',
-        category: 'Entertainment',
-        paymentMethod: 'Credit Card',
-        type: 'expense',
-        date: '2025-06-24T00:00:00.000Z'
-      },
-      {
-        id: '4',
-        amount: 4250.00,
-        description: 'Monthly Salary',
-        category: 'Salary',
-        paymentMethod: 'Bank Transfer',
-        type: 'income',
-        date: '2025-06-23T00:00:00.000Z'
-      }
-    ];
-    
-    setTransactions(sampleData);
-    localStorage.setItem('transactions', JSON.stringify(sampleData));
+    const emptyTransactions = [];
+    setTransactions(emptyTransactions);
+    localStorage.setItem('transactions', JSON.stringify(emptyTransactions));
   };
   
   // Update localStorage and calculate financial summary whenever transactions change

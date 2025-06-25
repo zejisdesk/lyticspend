@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const CustomDropdown = ({ options, value, onChange, placeholder, label, id, required, items = null, iconProperty = 'icon' }) => {
+const CustomDropdown = ({ options, value, onChange, placeholder, label, id, required, items = null, iconProperty = 'icon', showFooter = true }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
@@ -99,6 +99,18 @@ const CustomDropdown = ({ options, value, onChange, placeholder, label, id, requ
               <div className="custom-dropdown-no-results">No results found</div>
             )}
           </div>
+          {showFooter && (
+            <div 
+              className="custom-dropdown-footer" 
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(false);
+                window.location.href = '#/settings';
+              }}
+            >
+              Go to <span className="settings-link">settings</span> to customize
+            </div>
+          )}
         </div>
       )}
       

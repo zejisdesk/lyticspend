@@ -13,11 +13,21 @@ import Reports from './components/Reports';
 import Settings from './components/Settings';
 import InitialCurrencyModal from './components/InitialCurrencyModal';
 
+// Services
+import { 
+  startReminderScheduler, 
+  stopReminderScheduler,
+  registerServiceWorker,
+  updateServiceWorkerReminders,
+  initNotificationService
+} from './services/notificationService';
+
 // Context Providers
 import { CurrencyProvider } from './context/CurrencyContext';
 import { BudgetProvider } from './context/BudgetContext';
 import { CategoryProvider, useCategories } from './context/CategoryContext';
 import { PaymentMethodProvider, usePaymentMethods } from './context/PaymentMethodContext';
+import { ThemeProvider } from './context/ThemeContext';
 
 // Custom hooks
 import useTransactions from './hooks/useTransactions';
@@ -79,6 +89,40 @@ const AppContent = () => {
     if (!savedCurrency) {
       setShowInitialCurrencyModal(true);
     }
+  }, []);
+  
+  // Initialize notification system and Service Worker when app loads
+  useEffect(() => {
+    const initNotifications = async () => {
+      try {
+        // Check if notifications are enabled in localStorage
+        const notificationsEnabled = localStorage.getItem('notifications') === 'true';
+        
+        // Register Service Worker regardless of notification state
+        // This allows the Service Worker to be ready when notifications are enabled
+        if ('serviceWorker' in navigator) {
+          await registerServiceWorker();
+        }
+        
+        // Initialize the notification service (sets up message listeners)
+        initNotificationService();
+        
+        // Only start the scheduler if notifications are enabled and permission is granted
+        if (notificationsEnabled && 'Notification' in window && Notification.permission === 'granted') {
+          await startReminderScheduler();
+          await updateServiceWorkerReminders();
+        }
+      } catch (error) {
+        console.error('Error initializing notifications:', error);
+      }
+    };
+    
+    initNotifications();
+    
+    // Clean up by stopping the scheduler when component unmounts
+    return () => {
+      stopReminderScheduler();
+    };
   }, []);
   
   // Handle adding a new transaction
@@ -161,6 +205,7 @@ const AppContent = () => {
                 paymentMethodFilter={paymentMethodFilter}
                 onDeleteTransaction={handleDeleteTransaction}
                 onEditTransaction={handleEditTransaction}
+                type="expense"
               />
             </div>
           </>
@@ -184,6 +229,7 @@ const AppContent = () => {
                 paymentMethodFilter="all"
                 onDeleteTransaction={handleDeleteTransaction}
                 onEditTransaction={handleEditTransaction}
+                type="income"
               />
             </div>
           </>
@@ -212,12 +258,7 @@ const AppContent = () => {
           activeTab={activeTab}
         />
         <div className="main-content" style={{marginTop: '0', padding: '0 0.75rem'}}>
-          {transactions && transactions.length > 0 ? renderMainContent() : (
-            <div className="loading-state">
-              <p>Loading transactions...</p>
-              <button onClick={() => window.location.reload()}>Refresh</button>
-            </div>
-          )}
+          {renderMainContent()}
         </div>
       </div>
       
@@ -287,15 +328,17 @@ const AppContent = () => {
 // Wrapper component that provides context
 function App() {
   return (
-    <CurrencyProvider>
-      <BudgetProvider>
-        <CategoryProvider>
-          <PaymentMethodProvider>
-            <AppContent />
-          </PaymentMethodProvider>
-        </CategoryProvider>
-      </BudgetProvider>
-    </CurrencyProvider>
+    <ThemeProvider>
+      <CurrencyProvider>
+        <BudgetProvider>
+          <CategoryProvider>
+            <PaymentMethodProvider>
+              <AppContent />
+            </PaymentMethodProvider>
+          </CategoryProvider>
+        </BudgetProvider>
+      </CurrencyProvider>
+    </ThemeProvider>
   );
 }
 

@@ -240,6 +240,7 @@ const PaymentMethodManagementModal = ({
                 id="paymentMethodIcon"
                 value={newPaymentMethodIcon}
                 onChange={(e) => setNewPaymentMethodIcon(e.target.value)}
+                showFooter={false}
               />
             </div>
             
