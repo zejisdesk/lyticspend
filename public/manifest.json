@@ -20,8 +20,8 @@
       "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "/lyticspend/",
+  "scope": "/lyticspend/",
   "display": "standalone",
   "theme_color": "#4285f4",
   "background_color": "#ffffff",
@@ -36,6 +36,6 @@
   "related_applications": [],
   "serviceworker": {
     "src": "service-worker.js",
-    "scope": "/"
+    "scope": "/lyticspend/"
   }
 }

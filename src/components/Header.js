@@ -13,7 +13,7 @@ const Header = ({ income, expenses, balance, activeTab, transactions }) => {
     <div className="header">
       <div className="header-title">
         <div className="app-title">
-          <img src="/app_logo.svg" alt="Lytic Spend Logo" className="app-logo" />
+          <img src={process.env.PUBLIC_URL + '/app_logo.svg'} alt="Lytic Spend Logo" className="app-logo" />
           <h1>Lyticspend</h1>
         </div>
         <p className="month-display">{currentMonth}</p>
