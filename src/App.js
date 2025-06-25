@@ -12,6 +12,7 @@ import ConfirmationModal from './components/ConfirmationModal';
 import Reports from './components/Reports';
 import Settings from './components/Settings';
 import InitialCurrencyModal from './components/InitialCurrencyModal';
+import InstallPrompt from './components/InstallPrompt';
 
 // Services
 import { 
@@ -315,6 +316,9 @@ const AppContent = () => {
         activeTab={activeTab} 
         onTabChange={handleTabChange} 
       />
+      
+      {/* Install Prompt */}
+      <InstallPrompt />
       
       {/* Initial Currency Selection Modal */}
       <InitialCurrencyModal 
