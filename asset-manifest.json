@@ -1,16 +1,16 @@
 {
   "files": {
     "main.css": "/lyticspend/static/css/main.792d46fc.css",
-    "main.js": "/lyticspend/static/js/main.ad85cb99.js",
+    "main.js": "/lyticspend/static/js/main.2357e315.js",
     "static/js/453.c991c563.chunk.js": "/lyticspend/static/js/453.c991c563.chunk.js",
     "service-worker.js": "/lyticspend/service-worker.js",
     "index.html": "/lyticspend/index.html",
     "main.792d46fc.css.map": "/lyticspend/static/css/main.792d46fc.css.map",
-    "main.ad85cb99.js.map": "/lyticspend/static/js/main.ad85cb99.js.map",
+    "main.2357e315.js.map": "/lyticspend/static/js/main.2357e315.js.map",
     "453.c991c563.chunk.js.map": "/lyticspend/static/js/453.c991c563.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.792d46fc.css",
-    "static/js/main.ad85cb99.js"
+    "static/js/main.2357e315.js"
   ]
 }
