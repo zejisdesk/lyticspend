@@ -647,7 +647,7 @@ const Settings = () => {
               </div>
               <div className="budget-buttons">
                 <button 
-                  className="clear-budget-button"
+                  className="btn-secondary"
                   onClick={() => {
                     updateMonthlyBudget(0);
                     setBudgetInput('');
@@ -657,7 +657,7 @@ const Settings = () => {
                   Clear
                 </button>
                 <button 
-                  className="save-budget-button"
+                  className="btn-primary"
                   onClick={handleUpdateBudget}
                   disabled={!budgetInput.trim() || isNaN(parseFloat(budgetInput)) || parseFloat(budgetInput) < 0}
                 >
