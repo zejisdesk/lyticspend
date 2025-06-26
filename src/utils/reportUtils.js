@@ -66,11 +66,9 @@ export const generateCSVReport = (data, currencyCode, reportType = 'transactions
       csvContent += `Net Balance,${balance.toFixed(2)}\n`;
       csvContent += `Percentage of Income Spent,${totalIncome > 0 ? Math.round((totalExpenses / totalIncome) * 100) : 0}%\n`;
       
-      // Only add budget utilization and savings/debt ratio if there are transactions
-      if (transactions.length > 0) {
-        csvContent += `Budget Utilization (YTD),${budgetUtilization}%\n`;
-        csvContent += `Savings/Debt Ratio,${savingsDisplay}\n`;
-      }
+      // Always include budget utilization and savings/debt ratio
+      csvContent += `Budget Utilization (YTD),${budgetUtilization}%\n`;
+      csvContent += `Savings/Debt Ratio,${savingsDisplay}\n`;
       
       csvContent += '\n';
       
@@ -587,11 +585,9 @@ export const generateXLSXReport = (data, currencyCode, reportType = 'full') => {
         ['Percentage of Income Spent', '', '', '', `${totalIncome > 0 ? Math.round((totalExpenses / totalIncome) * 100) : 0}%`]
       ];
       
-      // Only add budget utilization and savings/debt ratio if there are transactions
-      if (transactions.length > 0) {
-        titleData.push(['Budget Utilization (YTD)', '', '', '', `${budgetUtilization}%`]);
-        titleData.push(['Savings/Debt Ratio', '', '', '', savingsDisplay]);
-      }
+      // Always include budget utilization and savings/debt ratio
+      titleData.push(['Budget Utilization (YTD)', '', '', '', `${budgetUtilization}%`]);
+      titleData.push(['Savings/Debt Ratio', '', '', '', savingsDisplay]);
       
       const summarySheet = XLSX.utils.aoa_to_sheet(titleData);
       
@@ -1127,7 +1123,7 @@ export const generatePDFReport = (data, currencyCode, reportType = 'full') => {
                 <td>Percentage of Income Spent</td>
                 <td>${totalIncome > 0 ? Math.round((totalExpenses / totalIncome) * 100) : 0}%</td>
               </tr>
-              ${reportType === 'full' && transactions.length > 0 ? `
+              ${reportType === 'full' ? `
               <tr>
                 <td>Budget Utilization (YTD)</td>
                 <td>${budgetUtilization}%</td>
