@@ -137,11 +137,8 @@ export const generateStyledExcelReport = async (data, currencyCode, reportType =
       });
       
       // Add reporting period - 11pt, regular, centered, no background
-      // Get current month and year or use default
-      const currentDate = new Date();
-      const reportingMonth = monthlyData.current.month || 'June';
-      const reportingYear = monthlyData.current.year || currentDate.getFullYear();
-      const reportingPeriodRow = worksheet.addRow([`Reporting Period: ${reportingMonth} ${reportingYear}`, '', '', '', '']);
+      // Use the selected month-year from data or fall back to current month data
+      const reportingPeriodRow = worksheet.addRow([`Reporting Period: ${data.selectedMonthYear || monthlyData.current.month + ' ' + (monthlyData.current.year || new Date().getFullYear())}`, '', '', '', '']);
       worksheet.mergeCells(`A${reportingPeriodRow.number}:E${reportingPeriodRow.number}`);
       reportingPeriodRow.height = 22; // Adjusted height for 11pt font
       reportingPeriodRow.eachCell(cell => {

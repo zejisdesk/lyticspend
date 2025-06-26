@@ -79,6 +79,7 @@ export const generateCSVReport = (data, currencyCode, reportType = 'transactions
     if (reportType === 'full') {
       // For full report, include summary data and transactions
       csvContent = 'LYTICSPEND FULL FINANCIAL REPORT\n';
+      csvContent += `Reporting Period,${data.selectedMonthYear || monthlyData.current.month || 'Current Month'}\n`;
       csvContent += `Generated on,${new Date().toLocaleDateString()}\n\n`;
       
       // Financial Summary
@@ -522,7 +523,7 @@ export const generateXLSXReport = (data, currencyCode, reportType = 'full') => {
       const reportData = [
         ['LYTICSPEND ANALYTICS REPORT', '', '', '', ''],
         ['Monthly Expense Analysis', '', '', '', ''],
-        [`Reporting Period: ${monthlyData.current.month || 'June 2025'}`, '', '', '', ''],
+        [`Reporting Period: ${data.selectedMonthYear || monthlyData.current.month || 'Current Month'}`, '', '', '', ''],
         ['', '', '', '', ''],
         ['FINANCIAL SUMMARY', '', '', '', ''],
         ['', '', '', '', ''],
@@ -1155,7 +1156,7 @@ export const generatePDFReport = (data, currencyCode, reportType = 'full') => {
           <div class="header">
             <h1>${reportTitle}</h1>
             <div class="subtitle">Monthly Expense Analysis</div>
-            <div class="date">Reporting Period: ${new Date().toLocaleDateString('en-US', {month: 'long', year: 'numeric'})}</div>
+            <div class="date">Reporting Period: ${data.selectedMonthYear || new Date().toLocaleDateString('en-US', {month: 'long', year: 'numeric'})}</div>
           </div>
           
           <div class="financial-summary">

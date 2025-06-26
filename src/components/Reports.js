@@ -329,7 +329,8 @@ const Reports = ({ transactions, selectedMonthYear }) => {
           categoryData,
           frequentCategories,
           monthlyData,
-          transactions: transactions
+          transactions: transactions,
+          selectedMonthYear: selectedMonthYear // Add the selected month-year to the report data
         }}
         currency={currency}
       />
