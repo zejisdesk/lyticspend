@@ -52,6 +52,18 @@ export const generateCSVReport = (data, currencyCode, reportType = 'transactions
     const totalExpenses = data?.totalExpenses || 0;
     const balance = totalIncome - totalExpenses;
     
+    // Calculate budget utilization dynamically
+    // Assuming monthly budget is 75% of income or at least 3800
+    const monthlyBudget = Math.max(totalIncome * 0.75, 3800);
+    const budgetUtilizationValue = monthlyBudget > 0 ? Math.round((totalExpenses / monthlyBudget) * 100) : 0;
+    
+    // Calculate savings/debt ratio dynamically
+    // Positive value means savings, negative means debt
+    const savingsRatio = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0;
+    const savingsRatioFormatted = `${savingsRatio >= 0 ? '+' : ''}${savingsRatio}%`;
+    const savingsStatus = savingsRatio >= 0 ? '(Saving)' : '(Debt)';
+    const savingsDisplayValue = `${savingsRatioFormatted} ${savingsStatus}`;
+    
     let csvContent = '';
     
     if (reportType === 'full') {
@@ -181,6 +193,18 @@ export const generateXLSXReport = (data, currencyCode, reportType = 'full') => {
     const totalExpenses = data?.totalExpenses || 0;
     const balance = totalIncome - totalExpenses;
     const frequentCategories = data?.frequentCategories || [];
+    
+    // Calculate budget utilization dynamically
+    // Assuming monthly budget is 75% of income or at least 3800
+    const monthlyBudget = Math.max(totalIncome * 0.75, 3800);
+    const budgetUtilizationValue = monthlyBudget > 0 ? Math.round((totalExpenses / monthlyBudget) * 100) : 0;
+    
+    // Calculate savings/debt ratio dynamically
+    // Positive value means savings, negative means debt
+    const savingsRatio = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0;
+    const savingsRatioFormatted = `${savingsRatio >= 0 ? '+' : ''}${savingsRatio}%`;
+    const savingsStatus = savingsRatio >= 0 ? '(Saving)' : '(Debt)';
+    const savingsDisplayValue = `${savingsRatioFormatted} ${savingsStatus}`;
     
     // Format date for Excel
     const formatDate = (dateString) => {
