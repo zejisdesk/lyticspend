@@ -99,3 +99,52 @@ export const calculateBudgetPercentage = (expenses, budget, income) => {
 export const getCurrentMonthYear = () => {
   return new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
 };
+
+/**
+ * Parse a month year string into a Date object
+ * @param {string} monthYearStr - Month and year string (e.g., "June 2025")
+ * @returns {Date} Date object set to the first day of the specified month and year
+ */
+export const parseMonthYear = (monthYearStr) => {
+  const parts = monthYearStr.split(' ');
+  if (parts.length !== 2) return new Date(); // Default to current date if invalid format
+  
+  const monthName = parts[0];
+  const year = parseInt(parts[1], 10);
+  
+  // Map month names to month indices (0-11)
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  
+  const monthIndex = months.findIndex(m => m === monthName);
+  if (monthIndex === -1) return new Date(); // Default to current date if invalid month name
+  
+  return new Date(year, monthIndex, 1);
+};
+
+/**
+ * Filter transactions by month and year
+ * @param {Array} transactions - Array of transactions to filter
+ * @param {string} monthYearStr - Month and year string (e.g., "June 2025")
+ * @returns {Array} Filtered transactions for the specified month and year
+ */
+export const filterTransactionsByMonthYear = (transactions, monthYearStr) => {
+  if (!transactions || !Array.isArray(transactions)) return [];
+  if (!monthYearStr) return transactions;
+  
+  const targetDate = parseMonthYear(monthYearStr);
+  const targetMonth = targetDate.getMonth();
+  const targetYear = targetDate.getFullYear();
+  
+  return transactions.filter(transaction => {
+    if (!transaction || !transaction.date) return false;
+    
+    const transactionDate = new Date(transaction.date);
+    return (
+      transactionDate.getMonth() === targetMonth &&
+      transactionDate.getFullYear() === targetYear
+    );
+  });
+};

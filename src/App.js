@@ -36,7 +36,7 @@ import { ThemeProvider } from './context/ThemeContext';
 import useTransactions from './hooks/useTransactions';
 
 // Utility functions
-import { getCurrentMonthYear } from './utils/financialUtils';
+import { getCurrentMonthYear, filterTransactionsByMonthYear } from './utils/financialUtils';
 
 // Main App component wrapper to use context hooks
 const AppContent = () => {
@@ -83,8 +83,15 @@ const AppContent = () => {
   // Initial currency selection modal state
   const [showInitialCurrencyModal, setShowInitialCurrencyModal] = useState(false);
   
-  // Get current month and year
-  const currentMonth = getCurrentMonthYear();
+  // Month-year filter state
+  const [selectedMonthYear, setSelectedMonthYear] = useState(getCurrentMonthYear());
+  
+  // Handle month-year change
+  const handleMonthYearChange = (monthYear) => {
+    setSelectedMonthYear(monthYear);
+    // Reset scroll position to top when changing month
+    window.scrollTo(0, 0);
+  };
   
   // Check if currency is set in localStorage and show initial modal if not
   useEffect(() => {
@@ -163,8 +170,11 @@ const AppContent = () => {
     setShowEditModal(false);
   };
   
-  // Filter transactions based on active tab
-  const filteredTransactions = transactions.filter(transaction => {
+  // First filter transactions by selected month and year
+  const monthFilteredTransactions = filterTransactionsByMonthYear(transactions, selectedMonthYear);
+  
+  // Then filter by transaction type based on active tab
+  const filteredTransactions = monthFilteredTransactions.filter(transaction => {
     if (!transaction) return false;
     
     if (activeTab === 'expenses') {
@@ -238,7 +248,10 @@ const AppContent = () => {
           </>
         );
       case 'reports':
-        return <Reports transactions={transactions} />;
+        return <Reports 
+          transactions={monthFilteredTransactions} 
+          selectedMonthYear={selectedMonthYear} 
+        />;
       case 'settings':
         return <Settings />;
       default:
@@ -254,11 +267,15 @@ const AppContent = () => {
   return (
     <div className="App">
       <div className="app-container">
+        <ThemeColorManager />
         <Header 
-          balance={balance} 
           income={income} 
-          expenses={expenses}
+          expenses={expenses} 
+          balance={balance} 
           activeTab={activeTab}
+          transactions={transactions}
+          selectedMonthYear={selectedMonthYear}
+          onMonthYearChange={handleMonthYearChange}
         />
         <div className="main-content" style={{marginTop: '0', padding: '0 0.75rem'}}>
           {renderMainContent()}

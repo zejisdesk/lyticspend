@@ -1,9 +1,8 @@
 import React from 'react';
 import { useCurrency } from '../context/CurrencyContext';
-import { getCurrentMonthYear } from '../utils/financialUtils';
+import MonthYearPicker from './MonthYearPicker';
 
-const Header = ({ income, expenses, balance, activeTab, transactions }) => {
-  const currentMonth = getCurrentMonthYear();
+const Header = ({ income, expenses, balance, activeTab, transactions, selectedMonthYear, onMonthYearChange }) => {
   const { currency } = useCurrency();
   
   // Only render the summary card for the expenses tab
@@ -16,7 +15,12 @@ const Header = ({ income, expenses, balance, activeTab, transactions }) => {
           <img src={process.env.PUBLIC_URL + '/app_logo.svg'} alt="Lytic Spend Logo" className="app-logo" />
           <h1>Lyticspend</h1>
         </div>
-        <p className="month-display">{currentMonth}</p>
+        {activeTab !== 'settings' && (
+          <MonthYearPicker 
+            selectedMonthYear={selectedMonthYear}
+            onMonthYearChange={onMonthYearChange}
+          />
+        )}
       </div>
       
       {shouldShowSummary && (

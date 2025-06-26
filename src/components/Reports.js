@@ -5,7 +5,7 @@ import { useCategories } from '../context/CategoryContext';
 import { usePaymentMethods } from '../context/PaymentMethodContext';
 import DownloadReportModal from './DownloadReportModal';
 
-const Reports = ({ transactions }) => {
+const Reports = ({ transactions, selectedMonthYear }) => {
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const { currency } = useCurrency();
   const { monthlyBudget } = useBudget();
