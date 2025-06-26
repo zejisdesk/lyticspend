@@ -18,6 +18,15 @@ const isLocalhost = Boolean(
     window.location.hostname.match(/^127(?:\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)){3}$/)
 );
 
+// Add a custom event listener to handle SKIP_WAITING message from the UI
+let refreshing = false;
+navigator.serviceWorker.addEventListener('controllerchange', () => {
+  if (refreshing) return;
+  refreshing = true;
+  // Only reload once to prevent infinite reload loops
+  console.log('Controller changed, refreshing page...');
+});
+
 export function register(config) {
   // Allow registration in both development and production
   if ('serviceWorker' in navigator) {
@@ -32,6 +41,13 @@ export function register(config) {
 
     window.addEventListener('load', () => {
       const swUrl = `${process.env.PUBLIC_URL}/service-worker.js`;
+
+      // Check for updates every hour when the app is open
+      setInterval(() => {
+        if (navigator.serviceWorker.controller) {
+          navigator.serviceWorker.controller.postMessage({ type: 'CHECK_FOR_UPDATES' });
+        }
+      }, 60 * 60 * 1000); // Check every hour
 
       if (isLocalhost) {
         // This is running on localhost. Let's check if a service worker still exists or not.
@@ -59,6 +75,9 @@ function registerValidSW(swUrl, config) {
   navigator.serviceWorker
     .register(swUrl)
     .then((registration) => {
+      // Check for updates immediately after registration
+      registration.update();
+      
       registration.onupdatefound = () => {
         const installingWorker = registration.installing;
         if (installingWorker == null) {
@@ -71,18 +90,19 @@ function registerValidSW(swUrl, config) {
               // but the previous service worker will still serve the older
               // content until all client tabs are closed.
               console.log(
-                'New content is available and will be used when all ' +
-                  'tabs for this page are closed. See https://cra.link/PWA.'
+                'New content is available. Notifying user to update.'
               );
+
+              // Notify the user about the update
+              if (navigator.serviceWorker.controller) {
+                navigator.serviceWorker.controller.postMessage({
+                  type: 'UPDATE_AVAILABLE'
+                });
+              }
 
               // Execute callback
               if (config && config.onUpdate) {
                 config.onUpdate(registration);
-              }
-              
-              // Force the service worker to activate immediately
-              if (installingWorker && installingWorker.state === 'installed') {
-                installingWorker.postMessage({ type: 'SKIP_WAITING' });
               }
             } else {
               // At this point, everything has been precached.
@@ -98,6 +118,19 @@ function registerValidSW(swUrl, config) {
           }
         };
       };
+      
+      // Set up message listener for the service worker
+      navigator.serviceWorker.addEventListener('message', (event) => {
+        if (event.data && event.data.type === 'SKIP_WAITING') {
+          if (registration.waiting) {
+            console.log('Skipping waiting and activating new service worker');
+            registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          }
+        } else if (event.data && event.data.type === 'CHECK_FOR_UPDATES') {
+          console.log('Checking for updates...');
+          registration.update();
+        }
+      });
     })
     .catch((error) => {
       console.error('Error during service worker registration:', error);

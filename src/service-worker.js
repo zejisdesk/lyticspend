@@ -23,6 +23,19 @@ self.addEventListener('message', (event) => {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     console.log('[Service Worker] Skipping waiting and activating immediately');
     self.skipWaiting();
+  } else if (event.data && event.data.type === 'CHECK_FOR_UPDATES') {
+    console.log('[Service Worker] Checking for updates');
+    // Service worker will automatically check for updates
+    // when registration.update() is called from the client
+    
+    // Notify all clients that we're checking for updates
+    self.clients.matchAll().then(clients => {
+      clients.forEach(client => {
+        client.postMessage({
+          type: 'CHECKING_FOR_UPDATES'
+        });
+      });
+    });
   } else if (event.data && event.data.type === 'TEST_COMMUNICATION') {
     // Handle test communication message
     console.log('[Service Worker] Received test communication message');
@@ -126,28 +139,7 @@ registerRoute(
 
 // This allows the web app to trigger skipWaiting via
 // registration.waiting.postMessage({type: 'SKIP_WAITING'})
-self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  } else if (event.data && event.data.type === 'TEST_COMMUNICATION') {
-    // Handle test communication message
-    console.log('[Service Worker] Received test communication message');
-    
-    // Send response back
-    if (event.ports && event.ports[0]) {
-      console.log('[Service Worker] Sending test communication response');
-      event.ports[0].postMessage({ 
-        type: 'TEST_COMMUNICATION_RESPONSE',
-        success: true,
-        timestamp: new Date().toISOString()
-      });
-    }
-  } else if (event.data && event.data.type === 'SCHEDULE_REMINDERS') {
-    console.log('[Service Worker] Scheduling reminders:', event.data.reminderTimes);
-    // Store reminders in IndexedDB or other persistent storage
-    // This is a simplified implementation
-    self.reminderTimes = event.data.reminderTimes;
-  }
-});
+// This is a duplicate event listener that was causing issues
+// The main event listener above now handles all message types
 
 // Any other custom service worker logic can go here.

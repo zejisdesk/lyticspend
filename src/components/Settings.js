@@ -13,6 +13,7 @@ import { useTheme } from '../context/ThemeContext';
 import CategoryManagementModal from './CategoryManagementModal';
 import PaymentMethodManagementModal from './PaymentMethodManagementModal';
 import IconDropdown from './IconDropdown';
+import { downloadAppData, readJSONFile, importAppData } from '../utils/dataExportImport';
 
 const Settings = () => {
   const { darkMode, toggleDarkMode } = useTheme();
@@ -76,6 +77,7 @@ const Settings = () => {
   const [showIncomeCategoryModal, setShowIncomeCategoryModal] = useState(false);
   const [showExpensePaymentMethodModal, setShowExpensePaymentMethodModal] = useState(false);
   const [showIncomePaymentMethodModal, setShowIncomePaymentMethodModal] = useState(false);
+  const [showDataExportImportModal, setShowDataExportImportModal] = useState(false);
   const [categoryType, setCategoryType] = useState('expense'); // 'expense' or 'income'
   const [methodType, setMethodType] = useState('expense'); // 'expense' or 'income'
   const [searchQuery, setSearchQuery] = useState('');
@@ -95,6 +97,13 @@ const Settings = () => {
   const { expenseCategories, incomeCategories, addCategory, updateCategory, removeCategory, resetCategories } = useCategories();
   const { expensePaymentMethods, incomePaymentMethods, addPaymentMethod, updatePaymentMethod, removePaymentMethod, resetPaymentMethods } = usePaymentMethods();
   
+  // Effect to set budget input when modal opens
+  useEffect(() => {
+    if (showBudgetModal && monthlyBudget !== null) {
+      setBudgetInput(monthlyBudget.toString());
+    }
+  }, [showBudgetModal, monthlyBudget]);
+
   // Handler for selecting a currency
   const handleCurrencySelect = (currencyCode) => {
     updateCurrency(currencyCode);
@@ -319,6 +328,7 @@ const Settings = () => {
 
   return (
     <div className="settings-container">
+      <h1>Settings</h1>
       {/* Appearance Section */}
       <div className="settings-section-header">APPEARANCE</div>
       
@@ -502,6 +512,26 @@ const Settings = () => {
         </div>
       </div>
       
+      {/* Data Management Section */}
+      <div className="settings-section-header">
+        <div>DATA MANAGEMENT</div>
+        <div className="settings-section-header-description">Backup your data or restore from a backup</div>
+      </div>
+      
+      <div className="settings-section">
+        <div className="settings-item" onClick={() => setShowDataExportImportModal(true)}>
+          <div className="settings-item-left">
+            <div className="settings-icon">
+              <i className="fas fa-file-export" style={{ color: '#0D6EFD' }}></i>
+            </div>
+            <div className="settings-label">Export/Import Data</div>
+          </div>
+          <div className="settings-item-right">
+            <i className="fas fa-chevron-right"></i>
+          </div>
+        </div>
+      </div>
+      
       {/* Community Section */}
       <div className="settings-section-header">
         <div>COMMUNITY</div>
@@ -615,13 +645,25 @@ const Settings = () => {
                   autoFocus
                 />
               </div>
-              <button 
-                className="save-budget-button"
-                onClick={handleUpdateBudget}
-                disabled={!budgetInput.trim() || isNaN(parseFloat(budgetInput)) || parseFloat(budgetInput) < 0}
-              >
-                Save
-              </button>
+              <div className="budget-buttons">
+                <button 
+                  className="clear-budget-button"
+                  onClick={() => {
+                    updateMonthlyBudget(0);
+                    setBudgetInput('');
+                    setShowBudgetModal(false);
+                  }}
+                >
+                  Clear
+                </button>
+                <button 
+                  className="save-budget-button"
+                  onClick={handleUpdateBudget}
+                  disabled={!budgetInput.trim() || isNaN(parseFloat(budgetInput)) || parseFloat(budgetInput) < 0}
+                >
+                  Save
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -708,6 +750,88 @@ const Settings = () => {
         removePaymentMethod={removePaymentMethod}
         resetPaymentMethods={resetPaymentMethods}
       />
+
+      {/* Data Export/Import Modal */}
+      {showDataExportImportModal && (
+        <div className="modal-overlay">
+          <div className="modal-content data-export-modal">
+            <div className="modal-header">
+              <h3>Export/Import Data</h3>
+              <button className="close-button" onClick={() => setShowDataExportImportModal(false)}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="export-import-section">
+                <h4>Export Data</h4>
+                <p>
+                  Export all your LyticSpend data to a JSON file. This includes your transactions, 
+                  categories, payment methods, budget settings, and preferences.
+                </p>
+                <button 
+                  className="primary-button"
+                  onClick={() => {
+                    try {
+                      downloadAppData();
+                    } catch (error) {
+                      console.error('Export error:', error);
+                      alert('Error exporting data: ' + (error.message || 'Unknown error'));
+                    }
+                  }}
+                >
+                  Export Data
+                </button>
+              </div>
+
+              <div className="export-import-section">
+                <h4>Import Data</h4>
+                <p>
+                  Import previously exported LyticSpend data. This will replace your current data.
+                  Make sure to export your current data first if you want to keep it.
+                </p>
+                <input
+                  type="file"
+                  id="import-file"
+                  accept=".json"
+                  style={{ display: 'none' }}
+                  onChange={async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+                    
+                    try {
+                      const jsonData = await readJSONFile(file);
+                      const result = importAppData(jsonData);
+                      
+                      if (result.success) {
+                        alert('Data imported successfully! The app will reload now.');
+                        setTimeout(() => {
+                          window.location.reload();
+                        }, 1000);
+                      } else {
+                        alert('Import failed: ' + result.message);
+                      }
+                    } catch (error) {
+                      console.error('Import error:', error);
+                      alert('Error importing data: ' + (error.message || 'Unknown error'));
+                    } finally {
+                      // Reset file input
+                      e.target.value = null;
+                    }
+                  }}
+                />
+                <button 
+                  className="secondary-button"
+                  onClick={() => {
+                    document.getElementById('import-file').click();
+                  }}
+                >
+                  Import Data
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

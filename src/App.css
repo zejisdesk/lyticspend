@@ -474,6 +474,145 @@ body.dark-mode .category-icon {
   color: #666;
 }
 
+/* Update Notification Styles */
+.update-notification {
+  position: fixed;
+  top: 20px;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  padding: 0 1rem;
+  animation: slideDown 0.3s ease-out;
+}
+
+.update-notification-content {
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 480px;
+  padding: 1rem;
+  transition: background-color 0.3s ease;
+}
+
+body.dark-mode .update-notification-content {
+  background-color: #1e1e1e;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.update-notification-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.75rem;
+  position: relative;
+}
+
+.update-notification-logo {
+  width: 24px;
+  height: 24px;
+  margin-right: 0.75rem;
+}
+
+.update-notification-header h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  flex-grow: 1;
+}
+
+.update-notification-close {
+  background: transparent;
+  border: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 1rem;
+  padding: 0.25rem;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transition: color 0.2s ease;
+}
+
+body.dark-mode .update-notification-close {
+  color: #a0a0a0;
+}
+
+.update-notification-close:hover {
+  color: #333;
+}
+
+body.dark-mode .update-notification-close:hover {
+  color: #ffffff;
+}
+
+.update-notification p {
+  margin: 0 0 1rem;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+body.dark-mode .update-notification p {
+  color: #a0a0a0;
+}
+
+.update-notification-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+.update-notification-button {
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.update-notification-button:hover {
+  background-color: #3367d6;
+}
+
+.update-notification-later {
+  background-color: transparent;
+  color: #666;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+body.dark-mode .update-notification-later {
+  color: #a0a0a0;
+}
+
+.update-notification-later:hover {
+  color: #333;
+}
+
+body.dark-mode .update-notification-later:hover {
+  color: #ffffff;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 /* Install Prompt Styles */
 .install-prompt {
   position: fixed;
@@ -493,7 +632,7 @@ body.dark-mode .category-icon {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   width: 100%;
   max-width: 480px;
-  padding: 1rem;
+  padding: 1.25rem;
   transition: background-color 0.3s ease;
 }
 
@@ -505,21 +644,27 @@ body.dark-mode .install-prompt-content {
 .install-prompt-header {
   display: flex;
   align-items: center;
-  margin-bottom: 0.75rem;
+  margin-bottom: 1rem;
   position: relative;
 }
 
 .install-prompt-logo {
-  width: 24px;
-  height: 24px;
+  width: 32px;
+  height: 32px;
   margin-right: 0.75rem;
+  border-radius: 6px;
 }
 
 .install-prompt-header h3 {
   margin: 0;
-  font-size: 1rem;
+  font-size: 1.1rem;
   font-weight: 600;
   flex-grow: 1;
+  color: #333;
+}
+
+body.dark-mode .install-prompt-header h3 {
+  color: #f0f0f0;
 }
 
 .install-prompt-close {
@@ -547,22 +692,132 @@ body.dark-mode .install-prompt-close:hover {
   color: #ffffff;
 }
 
-.install-prompt p {
+.install-prompt-description {
   margin: 0 0 1rem;
-  font-size: 0.9rem;
-  color: #666;
+  font-size: 0.95rem;
+  color: #555;
   line-height: 1.4;
 }
 
-body.dark-mode .install-prompt p {
-  color: #a0a0a0;
+body.dark-mode .install-prompt-description {
+  color: #b0b0b0;
 }
 
+/* iOS Instructions */
+.ios-instructions {
+  margin: 1rem 0;
+  padding-left: 1.5rem;
+}
+
+.ios-instructions li {
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+body.dark-mode .ios-instructions li {
+  color: #b0b0b0;
+}
+
+.ios-instruction-icon {
+  color: #2196f3;
+  margin-right: 0.5rem;
+  font-size: 1.1rem;
+}
+
+/* Install Benefits */
+.install-benefits {
+  margin: 1rem 0;
+  padding-left: 0.5rem;
+  list-style-type: none;
+}
+
+.install-benefits li {
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+body.dark-mode .install-benefits li {
+  color: #b0b0b0;
+}
+
+.install-benefits li i {
+  color: #4caf50;
+  margin-right: 0.5rem;
+  font-size: 0.9rem;
+}
+
+/* Action Buttons */
 .install-prompt-actions {
   display: flex;
-  justify-content: flex-end;
   gap: 0.75rem;
+  margin-top: 1.25rem;
 }
+
+.install-prompt-button, .install-prompt-got-it, .install-prompt-later {
+  border-radius: 6px;
+  font-weight: 500;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.install-prompt-button {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  flex: 1.5;
+}
+
+.install-prompt-button:hover {
+  background-color: #1976d2;
+}
+
+.install-prompt-button i {
+  margin-right: 0.5rem;
+}
+
+.install-prompt-got-it {
+  background-color: #2196f3;
+  color: white;
+  border: none;
+  flex: 1;
+}
+
+.install-prompt-got-it:hover {
+  background-color: #1976d2;
+}
+
+.install-prompt-later {
+  background-color: transparent;
+  color: #666;
+  border: 1px solid #ddd;
+  flex: 1;
+}
+
+body.dark-mode .install-prompt-later {
+  color: #b0b0b0;
+  border-color: #444;
+}
+
+.install-prompt-later:hover {
+  background-color: #f5f5f5;
+}
+
+body.dark-mode .install-prompt-later:hover {
+  background-color: #333;
+}
+
+/* Install Prompt Actions already defined above */
 
 .install-prompt-button {
   background-color: #4285f4;
@@ -600,6 +855,42 @@ body.dark-mode .install-prompt-later {
 
 body.dark-mode .install-prompt-later:hover {
   color: #ffffff;
+}
+
+.ios-instructions {
+  margin: 0.5rem 0 1rem;
+  padding-left: 1.5rem;
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.5;
+}
+
+body.dark-mode .ios-instructions {
+  color: #a0a0a0;
+}
+
+.ios-instructions li {
+  margin-bottom: 0.5rem;
+}
+
+.ios-instructions li:last-child {
+  margin-bottom: 0;
+}
+
+.ios-share-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background-color: #007AFF;
+  color: white;
+  border-radius: 4px;
+  font-size: 14px;
+  margin: 0 3px;
+  vertical-align: middle;
+  line-height: 1;
+  font-weight: bold;
 }
 
 @keyframes slideUp {
@@ -1065,6 +1356,105 @@ body.dark-mode .nav-item.active .nav-label {
 
 .about-info p {
   margin: 0.5rem 0;
+}
+
+/* Reports Component */
+.reports-container {
+  padding: 0;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Data Export/Import Modal */
+.data-export-modal {
+  max-width: 500px;
+  width: 90%;
+}
+
+.export-import-section {
+  margin-bottom: 20px;
+  padding: 15px;
+  border-radius: 8px;
+  background-color: #f5f5f5;
+}
+
+.dark-mode .export-import-section {
+  background-color: #333;
+}
+
+.export-import-section h3 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  color: #333;
+}
+
+.dark-mode .export-import-section h3 {
+  color: #f0f0f0;
+}
+
+.export-import-section p {
+  margin-bottom: 15px;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+.export-button, .import-button {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.export-button {
+  background-color: #2196f3;
+  color: white;
+}
+
+.export-button:hover {
+  background-color: #0d8aee;
+}
+
+.import-button {
+  background-color: #ff9800;
+  color: white;
+}
+
+.import-button:hover {
+  background-color: #f08c00;
+}
+
+.import-status {
+  margin-top: 15px;
+  padding: 10px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.import-status.success {
+  background-color: #e8f5e9;
+  color: #2e7d32;
+  border-left: 4px solid #2e7d32;
+}
+
+.dark-mode .import-status.success {
+  background-color: #1b5e20;
+  color: #e8f5e9;
+}
+
+.import-status.error {
+  background-color: #ffebee;
+  color: #c62828;
+  border-left: 4px solid #c62828;
+}
+
+.dark-mode .import-status.error {
+  background-color: #c62828;
+  color: #ffebee;
 }
 
 /* Reports Component */
@@ -1971,6 +2361,69 @@ body.dark-mode .budget-input {
   justify-content: flex-end;
   gap: 12px;
   margin-top: 10px;
+}
+
+.budget-buttons {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.clear-budget-button {
+  padding: 10px 20px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  flex: 1;
+  font-weight: 500;
+}
+
+.clear-budget-button:hover {
+  background-color: #d32f2f;
+}
+
+body.dark-mode .clear-budget-button {
+  background-color: #d32f2f;
+}
+
+body.dark-mode .clear-budget-button:hover {
+  background-color: #b71c1c;
+}
+
+.save-budget-button {
+  padding: 10px 20px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  flex: 1;
+  font-weight: 500;
+}
+
+.save-budget-button:hover {
+  background-color: #388E3C;
+}
+
+.save-budget-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+body.dark-mode .save-budget-button {
+  background-color: #388E3C;
+}
+
+body.dark-mode .save-budget-button:hover {
+  background-color: #2E7D32;
+}
+
+body.dark-mode .save-budget-button:disabled {
+  background-color: #555555;
+  color: #888888;
 }
 
 .cancel-button, .save-button {

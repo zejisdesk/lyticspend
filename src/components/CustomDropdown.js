@@ -28,12 +28,8 @@ const CustomDropdown = ({ options, value, onChange, placeholder, label, id, requ
     };
   }, []);
 
-  // Focus search input when dropdown opens
-  useEffect(() => {
-    if (isOpen && searchInputRef.current) {
-      searchInputRef.current.focus();
-    }
-  }, [isOpen]);
+  // We intentionally don't auto-focus the search input when dropdown opens
+  // This prevents mobile keyboard from automatically appearing
 
   // Toggle dropdown
   const toggleDropdown = () => {

@@ -13,6 +13,8 @@ import Reports from './components/Reports';
 import Settings from './components/Settings';
 import InitialCurrencyModal from './components/InitialCurrencyModal';
 import InstallPrompt from './components/InstallPrompt';
+import UpdateNotification from './components/UpdateNotification';
+import ThemeColorManager from './components/ThemeColorManager';
 
 // Services
 import { 
@@ -320,6 +322,9 @@ const AppContent = () => {
       {/* Install Prompt */}
       <InstallPrompt />
       
+      {/* Update Notification */}
+      <UpdateNotification />
+      
       {/* Initial Currency Selection Modal */}
       <InitialCurrencyModal 
         isOpen={showInitialCurrencyModal}
@@ -333,6 +338,7 @@ const AppContent = () => {
 function App() {
   return (
     <ThemeProvider>
+      <ThemeColorManager />
       <CurrencyProvider>
         <BudgetProvider>
           <CategoryProvider>
