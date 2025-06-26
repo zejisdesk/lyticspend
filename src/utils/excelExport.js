@@ -195,8 +195,17 @@ export const generateStyledExcelReport = async (data, currencyCode, reportType =
       });
       percentageRow.getCell(5).style = { ...percentageRow.getCell(5).style, ...styles.currencyCell, font: { name: 'Arial', size: 11 } };
       
-      // Budget Utilization - no background (even row)
-      const budgetUtilization = '75%'; // This would normally be calculated from data
+      // Budget Utilization - with white background (even row)
+      // Calculate budget utilization dynamically based on whether there are transactions
+      const hasTransactionsForSelectedMonth = transactions.length > 0;
+      const totalIncome = hasTransactionsForSelectedMonth ? (data?.totalIncome || 0) : 0;
+      const totalExpenses = hasTransactionsForSelectedMonth ? (data?.totalExpenses || 0) : 0;
+      const balance = totalIncome - totalExpenses;
+      const monthlyBudget = hasTransactionsForSelectedMonth ? Math.max(totalIncome * 0.75, 3800) : 0;
+      const budgetUtilizationValue = hasTransactionsForSelectedMonth && monthlyBudget > 0 ? 
+        Math.round((totalExpenses / monthlyBudget) * 100) : 0;
+      const budgetUtilization = `${budgetUtilizationValue}%`;
+      
       const budgetRow = worksheet.addRow(['Budget Utilization (YTD)', '', '', '', budgetUtilization]);
       budgetRow.height = 22;
       budgetRow.eachCell(cell => {
@@ -205,7 +214,10 @@ export const generateStyledExcelReport = async (data, currencyCode, reportType =
       budgetRow.getCell(5).style = { ...budgetRow.getCell(5).style, ...styles.currencyCell };
       
       // Savings Ratio - with #f9f9f9 background (odd row)
-      const savingsRatio = '98%'; // This would normally be calculated from data
+      // Calculate savings ratio dynamically based on whether there are transactions
+      const savingsRatioValue = hasTransactionsForSelectedMonth && totalIncome > 0 ? 
+        Math.round((balance / totalIncome) * 100) : 0;
+      const savingsRatio = `${savingsRatioValue}%`;
       const savingsRow = worksheet.addRow(['Savings Ratio', '', '', '', savingsRatio]);
       savingsRow.height = 22;
       savingsRow.eachCell(cell => {
