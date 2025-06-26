@@ -166,7 +166,8 @@ const Reports = ({ transactions, selectedMonthYear }) => {
   // Use the monthly budget from BudgetContext, or default to 75% of income if not set
   const effectiveBudget = monthlyBudget !== null ? monthlyBudget : Math.min(totalIncome * 0.75, 3800);
   const isBudgetSet = monthlyBudget !== null;
-  const budgetPercentage = Math.min(100, (totalExpenses / effectiveBudget * 100)).toFixed(0);
+  // Fix NaN% issue by checking if effectiveBudget is zero
+  const budgetPercentage = effectiveBudget > 0 ? Math.min(100, (totalExpenses / effectiveBudget * 100)).toFixed(0) : 0;
   
   // Calculate percentage of income spent
   const incomeSpentPercentage = totalIncome > 0 ? Math.min(100, (totalExpenses / totalIncome * 100)).toFixed(0) : 0;
@@ -192,9 +193,15 @@ const Reports = ({ transactions, selectedMonthYear }) => {
           <div className="progress-bar" style={{ width: `${budgetPercentage}%` }}></div>
         </div>
         <div className="progress-label">
-          {budgetPercentage}% of {currency.symbol}{effectiveBudget.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} 
-          {isBudgetSet ? ' monthly budget' : ' estimated budget'}
-          {!isBudgetSet && <span className="budget-note"> (set your own in Settings)</span>}
+          {effectiveBudget > 0 ? (
+            <>
+              {budgetPercentage}% of {currency.symbol}{effectiveBudget.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })} 
+              {isBudgetSet ? ' monthly budget' : ' estimated budget'}
+              {!isBudgetSet && <span className="budget-note"> (set your own in Settings)</span>}
+            </>
+          ) : (
+            <>No budget set. <span className="budget-note">Set your budget in Settings</span></>
+          )}
         </div>
       </div>
       
@@ -293,7 +300,7 @@ const Reports = ({ transactions, selectedMonthYear }) => {
             <div className="month-amount">{currency.symbol}{monthlyData.previous.total.toFixed(0)}</div>
             <div className="month-details">
               <div>Daily: {currency.symbol}{monthlyData.previous.daily.toFixed(0)}</div>
-              <div>Highest: {monthlyData.previous.highestDay}th</div>
+              <div>Highest: {monthlyData.previous.highestDay === 'N/A' ? 'N/A' : `${monthlyData.previous.highestDay}th`}</div>
             </div>
           </div>
           <div className="month-column">
@@ -301,7 +308,7 @@ const Reports = ({ transactions, selectedMonthYear }) => {
             <div className="month-amount">{currency.symbol}{monthlyData.current.total.toFixed(0)}</div>
             <div className="month-details">
               <div>Daily: {currency.symbol}{monthlyData.current.daily.toFixed(0)}</div>
-              <div>Highest: {monthlyData.current.highestDay}th</div>
+              <div>Highest: {monthlyData.current.highestDay === 'N/A' ? 'N/A' : `${monthlyData.current.highestDay}th`}</div>
             </div>
           </div>
         </div>
