@@ -48,21 +48,31 @@ export const generateCSVReport = (data, currencyCode, reportType = 'transactions
     // Extract additional data for full report
     const categoryData = data?.categoryData || [];
     const monthlyData = data?.monthlyData || { current: {}, previous: {} };
-    const totalIncome = data?.totalIncome || 0;
-    const totalExpenses = data?.totalExpenses || 0;
+    
+    // Check if there are any transactions for the selected month
+    const hasTransactionsForSelectedMonth = transactions.length > 0;
+    
+    // Only use actual transaction data if there are transactions for the selected month
+    const totalIncome = hasTransactionsForSelectedMonth ? (data?.totalIncome || 0) : 0;
+    const totalExpenses = hasTransactionsForSelectedMonth ? (data?.totalExpenses || 0) : 0;
     const balance = totalIncome - totalExpenses;
     
     // Calculate budget utilization dynamically
-    // Assuming monthly budget is 75% of income or at least 3800
-    const monthlyBudget = Math.max(totalIncome * 0.75, 3800);
-    const budgetUtilizationValue = monthlyBudget > 0 ? Math.round((totalExpenses / monthlyBudget) * 100) : 0;
+    // Only calculate if there are transactions for the selected month
+    const monthlyBudget = hasTransactionsForSelectedMonth ? Math.max(totalIncome * 0.75, 3800) : 0;
+    const budgetUtilizationValue = hasTransactionsForSelectedMonth && monthlyBudget > 0 ? 
+      Math.round((totalExpenses / monthlyBudget) * 100) : 0;
     
     // Calculate savings/debt ratio dynamically
-    // Positive value means savings, negative means debt
-    const savingsRatio = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0;
-    const savingsRatioFormatted = `${savingsRatio >= 0 ? '+' : ''}${savingsRatio}%`;
-    const savingsStatus = savingsRatio >= 0 ? '(Saving)' : '(Debt)';
-    const savingsDisplayValue = `${savingsRatioFormatted} ${savingsStatus}`;
+    // Only calculate if there are transactions for the selected month
+    const savingsRatio = hasTransactionsForSelectedMonth && totalIncome > 0 ? 
+      Math.round((balance / totalIncome) * 100) : 0;
+    const savingsRatioFormatted = hasTransactionsForSelectedMonth ? 
+      `${savingsRatio >= 0 ? '+' : ''}${savingsRatio}%` : '0%';
+    const savingsStatus = hasTransactionsForSelectedMonth ? 
+      (savingsRatio >= 0 ? '(Saving)' : '(Debt)') : '';
+    const savingsDisplayValue = hasTransactionsForSelectedMonth ? 
+      `${savingsRatioFormatted} ${savingsStatus}` : '0%';
     
     let csvContent = '';
     
@@ -189,22 +199,32 @@ export const generateXLSXReport = (data, currencyCode, reportType = 'full') => {
     const transactions = data?.transactions || [];
     const categoryData = data?.categoryData || [];
     const monthlyData = data?.monthlyData || { current: {}, previous: {} };
-    const totalIncome = data?.totalIncome || 0;
-    const totalExpenses = data?.totalExpenses || 0;
+    
+    // Check if there are any transactions for the selected month
+    const hasTransactionsForSelectedMonth = transactions.length > 0;
+    
+    // Only use actual transaction data if there are transactions for the selected month
+    const totalIncome = hasTransactionsForSelectedMonth ? (data?.totalIncome || 0) : 0;
+    const totalExpenses = hasTransactionsForSelectedMonth ? (data?.totalExpenses || 0) : 0;
     const balance = totalIncome - totalExpenses;
-    const frequentCategories = data?.frequentCategories || [];
+    const frequentCategories = hasTransactionsForSelectedMonth ? (data?.frequentCategories || []) : [];
     
     // Calculate budget utilization dynamically
-    // Assuming monthly budget is 75% of income or at least 3800
-    const monthlyBudget = Math.max(totalIncome * 0.75, 3800);
-    const budgetUtilizationValue = monthlyBudget > 0 ? Math.round((totalExpenses / monthlyBudget) * 100) : 0;
+    // Only calculate if there are transactions for the selected month
+    const monthlyBudget = hasTransactionsForSelectedMonth ? Math.max(totalIncome * 0.75, 3800) : 0;
+    const budgetUtilizationValue = hasTransactionsForSelectedMonth && monthlyBudget > 0 ? 
+      Math.round((totalExpenses / monthlyBudget) * 100) : 0;
     
     // Calculate savings/debt ratio dynamically
-    // Positive value means savings, negative means debt
-    const savingsRatio = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0;
-    const savingsRatioFormatted = `${savingsRatio >= 0 ? '+' : ''}${savingsRatio}%`;
-    const savingsStatus = savingsRatio >= 0 ? '(Saving)' : '(Debt)';
-    const savingsDisplayValue = `${savingsRatioFormatted} ${savingsStatus}`;
+    // Only calculate if there are transactions for the selected month
+    const savingsRatio = hasTransactionsForSelectedMonth && totalIncome > 0 ? 
+      Math.round((balance / totalIncome) * 100) : 0;
+    const savingsRatioFormatted = hasTransactionsForSelectedMonth ? 
+      `${savingsRatio >= 0 ? '+' : ''}${savingsRatio}%` : '0%';
+    const savingsStatus = hasTransactionsForSelectedMonth ? 
+      (savingsRatio >= 0 ? '(Saving)' : '(Debt)') : '';
+    const savingsDisplayValue = hasTransactionsForSelectedMonth ? 
+      `${savingsRatioFormatted} ${savingsStatus}` : '0%';
     
     // Format date for Excel
     const formatDate = (dateString) => {
@@ -839,21 +859,31 @@ export const generatePDFReport = (data, currencyCode, reportType = 'full') => {
     const categoryData = data?.categoryData || [];
     const frequentCategories = data?.frequentCategories || [];
     const monthlyData = data?.monthlyData || { current: {}, previous: {} };
-    const totalIncome = data?.totalIncome || 0;
-    const totalExpenses = data?.totalExpenses || 0;
+    
+    // Check if there are any transactions for the selected month
+    const hasTransactionsForSelectedMonth = transactions.length > 0;
+    
+    // Only use actual transaction data if there are transactions for the selected month
+    const totalIncome = hasTransactionsForSelectedMonth ? (data?.totalIncome || 0) : 0;
+    const totalExpenses = hasTransactionsForSelectedMonth ? (data?.totalExpenses || 0) : 0;
     const balance = totalIncome - totalExpenses;
     
     // Calculate budget utilization dynamically
-    // Assuming monthly budget is 75% of income or at least 3800
-    const monthlyBudget = Math.max(totalIncome * 0.75, 3800);
-    const budgetUtilizationValue = monthlyBudget > 0 ? Math.round((totalExpenses / monthlyBudget) * 100) : 0;
+    // Only calculate if there are transactions for the selected month
+    const monthlyBudget = hasTransactionsForSelectedMonth ? Math.max(totalIncome * 0.75, 3800) : 0;
+    const budgetUtilizationValue = hasTransactionsForSelectedMonth && monthlyBudget > 0 ? 
+      Math.round((totalExpenses / monthlyBudget) * 100) : 0;
     
     // Calculate savings/debt ratio dynamically
-    // Positive value means savings, negative means debt
-    const savingsRatio = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0;
-    const savingsRatioFormatted = `${savingsRatio >= 0 ? '+' : ''}${savingsRatio}%`;
-    const savingsStatus = savingsRatio >= 0 ? '(Saving)' : '(Debt)';
-    const savingsDisplayValue = `${savingsRatioFormatted} ${savingsStatus}`;
+    // Only calculate if there are transactions for the selected month
+    const savingsRatio = hasTransactionsForSelectedMonth && totalIncome > 0 ? 
+      Math.round((balance / totalIncome) * 100) : 0;
+    const savingsRatioFormatted = hasTransactionsForSelectedMonth ? 
+      `${savingsRatio >= 0 ? '+' : ''}${savingsRatio}%` : '0%';
+    const savingsStatus = hasTransactionsForSelectedMonth ? 
+      (savingsRatio >= 0 ? '(Saving)' : '(Debt)') : '';
+    const savingsDisplayValue = hasTransactionsForSelectedMonth ? 
+      `${savingsRatioFormatted} ${savingsStatus}` : '0%';
     
     console.log('Report data received:', data);
 
