@@ -314,10 +314,16 @@ const Reports = ({ transactions, selectedMonthYear }) => {
         </div>
       </div>
       
-      {/* Download Report Button */}
-      <button className="download-report-btn" onClick={() => setShowDownloadModal(true)}>
-        <i className="fas fa-download"></i> Download Report
-      </button>
+      {/* Download Report Button - Disabled when no transactions are available */}
+      {transactions.length > 0 ? (
+        <button className="download-report-btn" onClick={() => setShowDownloadModal(true)}>
+          <i className="fas fa-download"></i> Download Report
+        </button>
+      ) : (
+        <button className="download-report-btn disabled" disabled title="No transactions available for this month">
+          <i className="fas fa-download"></i> Download Report
+        </button>
+      )}
       
       {/* Download Report Modal */}
       <DownloadReportModal 

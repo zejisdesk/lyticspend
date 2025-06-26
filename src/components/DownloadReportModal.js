@@ -8,6 +8,32 @@ const DownloadReportModal = ({ isOpen, onClose, reportData, currency }) => {
   const [error, setError] = useState(null);
   
   if (!isOpen) return null;
+  
+  // Check if there are no transactions for the selected month
+  const hasNoTransactions = !reportData?.transactions || reportData.transactions.length === 0;
+  
+  // If there are no transactions, show a message and prevent downloads
+  if (hasNoTransactions) {
+    return (
+      <div className="modal-overlay">
+        <div className="modal-content">
+          <div className="modal-header">
+            <h2>Download Report</h2>
+            <button className="close-btn" onClick={onClose}>&times;</button>
+          </div>
+          <div className="modal-body">
+            <div className="error-message">
+              <i className="fas fa-exclamation-circle"></i>
+              No transactions available for the selected month. Please select a month with transactions to download a report.
+            </div>
+          </div>
+          <div className="modal-footer">
+            <button className="cancel-btn" onClick={onClose}>Close</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handlePDFDownload = (reportType) => {
     setIsGenerating(true);
