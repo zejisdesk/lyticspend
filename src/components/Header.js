@@ -5,7 +5,12 @@ import MonthYearPicker from './MonthYearPicker';
 const Header = ({ income, expenses, balance, activeTab, transactions, selectedMonthYear, onMonthYearChange }) => {
   const { currency } = useCurrency();
   
-  // Only render the summary card for the expenses tab
+  // Filter transactions for the selected month-year
+  const { filterTransactionsByMonthYear } = require('../utils/financialUtils');
+  const monthFilteredTransactions = filterTransactionsByMonthYear(transactions, selectedMonthYear);
+  
+  // Only render the summary card for the expenses tab and when there are transactions for the selected month
+  const hasTransactionsForSelectedMonth = monthFilteredTransactions.length > 0;
   const shouldShowSummary = activeTab === 'expenses';
   
   return (
@@ -23,7 +28,7 @@ const Header = ({ income, expenses, balance, activeTab, transactions, selectedMo
         )}
       </div>
       
-      {shouldShowSummary && (
+      {shouldShowSummary && hasTransactionsForSelectedMonth ? (
         <div className="summary-card">
           <div className="summary-section">
             <div className="summary-row">
@@ -44,7 +49,13 @@ const Header = ({ income, expenses, balance, activeTab, transactions, selectedMo
             </div>
           </div>
         </div>
-      )}
+      ) : shouldShowSummary ? (
+        <div className="summary-card no-transactions-summary">
+          <div className="empty-month-message">
+            <p>No transactions for {selectedMonthYear}</p>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 };

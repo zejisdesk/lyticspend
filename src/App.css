@@ -143,6 +143,27 @@ body.dark-mode .summary-card {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+.no-transactions-summary {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80px;
+}
+
+.empty-month-message {
+  text-align: center;
+  color: #666;
+  font-size: 1rem;
+}
+
+body.dark-mode .empty-month-message {
+  color: #aaa;
+}
+
+.empty-month-message p {
+  margin: 0;
+}
+
 .summary-metrics {
   display: flex;
   justify-content: space-between;
