@@ -2321,6 +2321,12 @@ body.dark-mode .budget-input-container {
   border: 1px solid #2a2a2a;
 }
 
+.budget-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
 .currency-symbol-prefix {
   background-color: #f5f5f5;
   padding: 12px 16px;
@@ -2334,6 +2340,11 @@ body.dark-mode .currency-symbol-prefix {
   background-color: #2a2a2a;
   color: #d4d4d4;
   border-right: 1px solid #333;
+}
+
+.budget-currency-symbol {
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .budget-input {
@@ -2368,6 +2379,55 @@ body.dark-mode .budget-input {
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
+}
+
+/* Budget Modal Button Styles */
+.budget-modal button,
+.modal-content button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  min-width: 80px;
+}
+
+.budget-modal button.btn-primary,
+.modal-content button.btn-primary,
+.modal-content button[type="submit"] {
+  background-color: #007bff;
+  color: white;
+}
+
+.budget-modal button.btn-primary:hover,
+.modal-content button.btn-primary:hover,
+.modal-content button[type="submit"]:hover {
+  background-color: #0069d9;
+}
+
+.budget-modal button.btn-secondary,
+.modal-content button.btn-secondary {
+  background-color: #f8f9fa;
+  color: #212529;
+  border: 1px solid #dee2e6;
+}
+
+.budget-modal button.btn-secondary:hover,
+.modal-content button.btn-secondary:hover {
+  background-color: #e2e6ea;
+}
+
+.dark-mode .budget-modal button.btn-secondary,
+.dark-mode .modal-content button.btn-secondary {
+  background-color: #343a40;
+  color: #f8f9fa;
+  border: 1px solid #495057;
+}
+
+.dark-mode .budget-modal button.btn-secondary:hover,
+.dark-mode .modal-content button.btn-secondary:hover {
+  background-color: #495057;
 }
 
 .budget-clear-button {
