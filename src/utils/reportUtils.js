@@ -64,7 +64,15 @@ export const generateCSVReport = (data, currencyCode, reportType = 'transactions
       csvContent += `Monthly Income,${totalIncome.toFixed(2)}\n`;
       csvContent += `Total Expenses,${totalExpenses.toFixed(2)}\n`;
       csvContent += `Net Balance,${balance.toFixed(2)}\n`;
-      csvContent += `Percentage of Income Spent,${totalIncome > 0 ? Math.round((totalExpenses / totalIncome) * 100) : 0}%\n\n`;
+      csvContent += `Percentage of Income Spent,${totalIncome > 0 ? Math.round((totalExpenses / totalIncome) * 100) : 0}%\n`;
+      
+      // Only add budget utilization and savings/debt ratio if there are transactions
+      if (transactions.length > 0) {
+        csvContent += `Budget Utilization (YTD),75%\n`;
+        csvContent += `Savings/Debt Ratio,+17% (Improving)\n`;
+      }
+      
+      csvContent += '\n';
       
       // Category Breakdown
       csvContent += 'EXPENSE CATEGORIES\n';
@@ -566,7 +574,8 @@ export const generateXLSXReport = (data, currencyCode, reportType = 'full') => {
       XLSX.utils.book_append_sheet(workbook, ws, 'Analytics Report');
     } else {
       // For full report, create a summary sheet
-      const titleData = [
+      // Base financial summary data
+      let titleData = [
         ['LYTICSPEND FULL FINANCIAL REPORT'],
         [`Generated on: ${new Date().toLocaleDateString()}`],
         [],
@@ -575,10 +584,14 @@ export const generateXLSXReport = (data, currencyCode, reportType = 'full') => {
         ['Monthly Income', '', '', '', `${currencyCode} ${totalIncome.toFixed(2)}`],
         ['Total Expenses', '', '', '', `${currencyCode} ${totalExpenses.toFixed(2)}`],
         ['Net Balance', '', '', '', `${currencyCode} ${balance.toFixed(2)}`],
-        ['Percentage of Income Spent', '', '', '', `${totalIncome > 0 ? Math.round((totalExpenses / totalIncome) * 100) : 0}%`],
-        ['Budget Utilization (YTD)', '', '', '', '75%'],
-        ['Savings/Debt Ratio', '', '', '', '+17% (Improving)']
+        ['Percentage of Income Spent', '', '', '', `${totalIncome > 0 ? Math.round((totalExpenses / totalIncome) * 100) : 0}%`]
       ];
+      
+      // Only add budget utilization and savings/debt ratio if there are transactions
+      if (transactions.length > 0) {
+        titleData.push(['Budget Utilization (YTD)', '', '', '', '75%']);
+        titleData.push(['Savings/Debt Ratio', '', '', '', '+17% (Improving)']);
+      }
       
       const summarySheet = XLSX.utils.aoa_to_sheet(titleData);
       
@@ -1102,7 +1115,7 @@ export const generatePDFReport = (data, currencyCode, reportType = 'full') => {
                 <td>Percentage of Income Spent</td>
                 <td>${totalIncome > 0 ? Math.round((totalExpenses / totalIncome) * 100) : 0}%</td>
               </tr>
-              ${reportType === 'full' ? `
+              ${reportType === 'full' && transactions.length > 0 ? `
               <tr>
                 <td>Budget Utilization (YTD)</td>
                 <td>75%</td>
