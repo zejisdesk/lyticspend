@@ -36,11 +36,24 @@ export const generateStyledExcelReport = async (data, currencyCode, reportType =
   try {
     const { transactions, categoryData, monthlyData, frequentCategories } = data;
     
-    // Calculate totals
-    const totalExpenses = categoryData.reduce((sum, category) => sum + category.amount, 0);
-    const totalIncome = transactions
-      .filter(t => t.type === 'income')
-      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+    // Calculate totals - use data values if provided, otherwise calculate from transactions
+    let totalExpenses = data.totalExpenses;
+    let totalIncome = data.totalIncome;
+    
+    // If not provided in data, calculate from transactions
+    if (totalExpenses === undefined) {
+      totalExpenses = categoryData.reduce((sum, category) => sum + category.amount, 0);
+    }
+    
+    if (totalIncome === undefined) {
+      totalIncome = transactions
+        .filter(t => t.type === 'income')
+        .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+    }
+    
+    // Ensure we have numbers, not undefined
+    totalExpenses = totalExpenses || 0;
+    totalIncome = totalIncome || 0;
     const balance = totalIncome - totalExpenses;
     
     // Create a new workbook with ExcelJS
@@ -198,10 +211,6 @@ export const generateStyledExcelReport = async (data, currencyCode, reportType =
       // Budget Utilization - with white background (even row)
       // Calculate budget utilization dynamically based on whether there are transactions
       const hasTransactionsForSelectedMonth = transactions.length > 0;
-      // Get these values from data directly to ensure they're defined before use
-      const totalIncome = data.totalIncome || 0;
-      const totalExpenses = data.totalExpenses || 0;
-      const balance = totalIncome - totalExpenses;
       const monthlyBudget = hasTransactionsForSelectedMonth ? Math.max(totalIncome * 0.75, 3800) : 0;
       const budgetUtilizationValue = hasTransactionsForSelectedMonth && monthlyBudget > 0 ? 
         Math.round((totalExpenses / monthlyBudget) * 100) : 0;
