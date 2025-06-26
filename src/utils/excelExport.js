@@ -198,8 +198,9 @@ export const generateStyledExcelReport = async (data, currencyCode, reportType =
       // Budget Utilization - with white background (even row)
       // Calculate budget utilization dynamically based on whether there are transactions
       const hasTransactionsForSelectedMonth = transactions.length > 0;
-      const totalIncome = hasTransactionsForSelectedMonth ? (data?.totalIncome || 0) : 0;
-      const totalExpenses = hasTransactionsForSelectedMonth ? (data?.totalExpenses || 0) : 0;
+      // Get these values from data directly to ensure they're defined before use
+      const totalIncome = data.totalIncome || 0;
+      const totalExpenses = data.totalExpenses || 0;
       const balance = totalIncome - totalExpenses;
       const monthlyBudget = hasTransactionsForSelectedMonth ? Math.max(totalIncome * 0.75, 3800) : 0;
       const budgetUtilizationValue = hasTransactionsForSelectedMonth && monthlyBudget > 0 ? 
