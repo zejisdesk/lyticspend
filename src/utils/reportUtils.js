@@ -88,9 +88,9 @@ export const generateCSVReport = (data, currencyCode, reportType = 'transactions
       csvContent += `Net Balance,${balance.toFixed(2)}\n`;
       csvContent += `Percentage of Income Spent,${totalIncome > 0 ? Math.round((totalExpenses / totalIncome) * 100) : 0}%\n`;
       
-      // Always include budget utilization and savings/debt ratio
-      csvContent += `Budget Utilization (YTD),${budgetUtilizationValue}%\n`;
-      csvContent += `Savings/Debt Ratio,${savingsDisplayValue}\n`;
+      // Always include budget utilization and savings/debt ratio with 0% for months with no transactions
+      csvContent += `Budget Utilization (YTD),${hasTransactionsForSelectedMonth ? budgetUtilizationValue : 0}%\n`;
+      csvContent += `Savings/Debt Ratio,${hasTransactionsForSelectedMonth ? savingsDisplayValue : '0%'}\n`;
       
       csvContent += '\n';
       
@@ -630,8 +630,8 @@ export const generateXLSXReport = (data, currencyCode, reportType = 'full') => {
       ];
       
       // Always include budget utilization and savings/debt ratio
-      titleData.push(['Budget Utilization (YTD)', '', '', '', `${budgetUtilizationValue}%`]);
-      titleData.push(['Savings/Debt Ratio', '', '', '', savingsDisplayValue]);
+      titleData.push(['Budget Utilization (YTD)', '', '', '', `${hasTransactionsForSelectedMonth ? budgetUtilizationValue : 0}%`]);
+      titleData.push(['Savings/Debt Ratio', '', '', '', hasTransactionsForSelectedMonth ? savingsDisplayValue : '0%']);
       
       const summarySheet = XLSX.utils.aoa_to_sheet(titleData);
       
@@ -1180,11 +1180,11 @@ export const generatePDFReport = (data, currencyCode, reportType = 'full') => {
               ${reportType === 'full' ? `
               <tr>
                 <td>Budget Utilization (YTD)</td>
-                <td>${budgetUtilizationValue}%</td>
+                <td>${hasTransactionsForSelectedMonth ? budgetUtilizationValue : 0}%</td>
               </tr>
               <tr>
                 <td>Savings/Debt Ratio</td>
-                <td class="${balance >= 0 ? 'positive' : 'negative'}">${savingsDisplayValue}</td>
+                <td class="${hasTransactionsForSelectedMonth && balance >= 0 ? 'positive' : 'negative'}">${hasTransactionsForSelectedMonth ? savingsDisplayValue : '0%'}</td>
               </tr>
               ` : ''}
             </table>
