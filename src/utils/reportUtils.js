@@ -67,8 +67,8 @@ export const generateCSVReport = (data, currencyCode, reportType = 'transactions
       csvContent += `Percentage of Income Spent,${totalIncome > 0 ? Math.round((totalExpenses / totalIncome) * 100) : 0}%\n`;
       
       // Always include budget utilization and savings/debt ratio
-      csvContent += `Budget Utilization (YTD),${budgetUtilization}%\n`;
-      csvContent += `Savings/Debt Ratio,${savingsDisplay}\n`;
+      csvContent += `Budget Utilization (YTD),${budgetUtilizationValue}%\n`;
+      csvContent += `Savings/Debt Ratio,${savingsDisplayValue}\n`;
       
       csvContent += '\n';
       
@@ -586,8 +586,8 @@ export const generateXLSXReport = (data, currencyCode, reportType = 'full') => {
       ];
       
       // Always include budget utilization and savings/debt ratio
-      titleData.push(['Budget Utilization (YTD)', '', '', '', `${budgetUtilization}%`]);
-      titleData.push(['Savings/Debt Ratio', '', '', '', savingsDisplay]);
+      titleData.push(['Budget Utilization (YTD)', '', '', '', `${budgetUtilizationValue}%`]);
+      titleData.push(['Savings/Debt Ratio', '', '', '', savingsDisplayValue]);
       
       const summarySheet = XLSX.utils.aoa_to_sheet(titleData);
       
@@ -822,14 +822,14 @@ export const generatePDFReport = (data, currencyCode, reportType = 'full') => {
     // Calculate budget utilization dynamically
     // Assuming monthly budget is 75% of income or at least 3800
     const monthlyBudget = Math.max(totalIncome * 0.75, 3800);
-    const budgetUtilization = monthlyBudget > 0 ? Math.round((totalExpenses / monthlyBudget) * 100) : 0;
+    const budgetUtilizationValue = monthlyBudget > 0 ? Math.round((totalExpenses / monthlyBudget) * 100) : 0;
     
     // Calculate savings/debt ratio dynamically
     // Positive value means savings, negative means debt
     const savingsRatio = totalIncome > 0 ? Math.round((balance / totalIncome) * 100) : 0;
     const savingsRatioFormatted = `${savingsRatio >= 0 ? '+' : ''}${savingsRatio}%`;
     const savingsStatus = savingsRatio >= 0 ? '(Saving)' : '(Debt)';
-    const savingsDisplay = `${savingsRatioFormatted} ${savingsStatus}`;
+    const savingsDisplayValue = `${savingsRatioFormatted} ${savingsStatus}`;
     
     console.log('Report data received:', data);
 
@@ -1126,11 +1126,11 @@ export const generatePDFReport = (data, currencyCode, reportType = 'full') => {
               ${reportType === 'full' ? `
               <tr>
                 <td>Budget Utilization (YTD)</td>
-                <td>${budgetUtilization}%</td>
+                <td>${budgetUtilizationValue}%</td>
               </tr>
               <tr>
                 <td>Savings/Debt Ratio</td>
-                <td class="${balance >= 0 ? 'positive' : 'negative'}">${savingsDisplay}</td>
+                <td class="${balance >= 0 ? 'positive' : 'negative'}">${savingsDisplayValue}</td>
               </tr>
               ` : ''}
             </table>
