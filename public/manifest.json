@@ -36,6 +36,6 @@
   "related_applications": [],
   "serviceworker": {
     "src": "service-worker.js",
-    "scope": "/lyticspend/"
+    "scope": "/"
   }
 }
