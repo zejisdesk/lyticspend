@@ -2,7 +2,7 @@ import React from 'react';
 import TransactionItem from './TransactionItem';
 import { useCurrency } from '../context/CurrencyContext';
 
-const TransactionGroup = ({ date, transactions, onDeleteTransaction, onEditTransaction }) => {
+const TransactionGroup = ({ date, transactions, onDeleteTransaction, onEditTransaction, onDuplicateTransaction }) => {
   
   const { currency } = useCurrency();
   // Calculate total for the day
@@ -48,6 +48,7 @@ const TransactionGroup = ({ date, transactions, onDeleteTransaction, onEditTrans
             transaction={transaction}
             onDelete={onDeleteTransaction}
             onEdit={onEditTransaction}
+            onDuplicate={onDuplicateTransaction}
           />
         ))}
       </div>

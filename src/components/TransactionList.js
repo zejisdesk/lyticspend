@@ -1,7 +1,7 @@
 import React from 'react';
 import TransactionGroup from './TransactionGroup';
 
-const TransactionList = ({ transactions, categoryFilter, paymentMethodFilter, onDeleteTransaction, onEditTransaction, type = 'expense' }) => {
+const TransactionList = ({ transactions, categoryFilter, paymentMethodFilter, onDeleteTransaction, onEditTransaction, onDuplicateTransaction, type = 'expense' }) => {
   // Safety check - if transactions is undefined or null, use empty array
   const transactionsArray = Array.isArray(transactions) ? transactions : [];
   
@@ -63,6 +63,7 @@ const TransactionList = ({ transactions, categoryFilter, paymentMethodFilter, on
             transactions={groupedTransactions[date]}
             onDeleteTransaction={onDeleteTransaction}
             onEditTransaction={onEditTransaction}
+            onDuplicateTransaction={onDuplicateTransaction}
           />
         ))
       ) : (

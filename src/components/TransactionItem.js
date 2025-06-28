@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useCurrency } from '../context/CurrencyContext';
 
-const TransactionItem = ({ transaction, onDelete, onEdit }) => {
+const TransactionItem = ({ transaction, onDelete, onEdit, onDuplicate }) => {
   const { currency } = useCurrency();
   const [showActions, setShowActions] = useState(false);
   const actionsRef = useRef(null);
@@ -89,6 +89,12 @@ const TransactionItem = ({ transaction, onDelete, onEdit }) => {
             onEdit(transaction);
           }}>
             <i className="fas fa-edit"></i> Edit
+          </button>
+          <button className="duplicate-btn" onClick={(e) => {
+            e.stopPropagation();
+            onDuplicate(transaction);
+          }}>
+            <i className="fas fa-copy"></i> Duplicate
           </button>
           <button className="delete-btn" onClick={(e) => {
             e.stopPropagation();

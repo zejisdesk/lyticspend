@@ -163,6 +163,21 @@ const AppContent = () => {
     setShowEditModal(true);
   };
   
+  // Handle duplicating a transaction
+  const handleDuplicateTransaction = (transaction) => {
+    // Create a copy of the transaction without the id (will be assigned on save)
+    setEditingTransaction({
+      ...transaction,
+      id: null // Remove id so a new one will be assigned
+    });
+    // Open the appropriate modal based on transaction type
+    if (transaction.type === 'expense') {
+      setShowExpenseModal(true);
+    } else {
+      setShowIncomeModal(true);
+    }
+  };
+  
   // Handle saving edited transaction
   const handleSaveEditedTransaction = (editedTransaction) => {
     updateTransaction(editedTransaction);
@@ -218,6 +233,7 @@ const AppContent = () => {
                 paymentMethodFilter={paymentMethodFilter}
                 onDeleteTransaction={handleDeleteTransaction}
                 onEditTransaction={handleEditTransaction}
+                onDuplicateTransaction={handleDuplicateTransaction}
                 type="expense"
               />
             </div>
@@ -242,6 +258,7 @@ const AppContent = () => {
                 paymentMethodFilter="all"
                 onDeleteTransaction={handleDeleteTransaction}
                 onEditTransaction={handleEditTransaction}
+                onDuplicateTransaction={handleDuplicateTransaction}
                 type="income"
               />
             </div>
@@ -286,18 +303,26 @@ const AppContent = () => {
       {showExpenseModal && (
         <AddTransactionModal 
           isOpen={showExpenseModal} 
-          onClose={() => setShowExpenseModal(false)} 
+          onClose={() => {
+            setShowExpenseModal(false);
+            setEditingTransaction(null);
+          }} 
           onSave={handleAddTransaction} 
-          type="expense" 
+          type="expense"
+          transaction={editingTransaction && editingTransaction.type === 'expense' ? editingTransaction : null}
         />
       )}
       
       {showIncomeModal && (
         <AddTransactionModal 
           isOpen={showIncomeModal} 
-          onClose={() => setShowIncomeModal(false)} 
+          onClose={() => {
+            setShowIncomeModal(false);
+            setEditingTransaction(null);
+          }} 
           onSave={handleAddTransaction} 
-          type="income" 
+          type="income"
+          transaction={editingTransaction && editingTransaction.type === 'income' ? editingTransaction : null}
         />
       )}
       

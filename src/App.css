@@ -1042,9 +1042,9 @@ body.dark-mode .transaction-modal-content {
 .modal-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   padding: 1rem;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #e0e0e0;
   transition: border-color 0.3s ease, background-color 0.3s ease;
 }
 
@@ -2243,7 +2243,7 @@ body.dark-mode .app-info {
   color: #a0a0a0;
 }
 
-/* Currency Modal Styles */
+/* Transaction Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -2252,9 +2252,35 @@ body.dark-mode .app-info {
   bottom: 0;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
   justify-content: center;
+  align-items: center;
   z-index: 1000;
+}
+
+/* Preserved Values Indicator Styles */
+.header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.preserved-values-indicator {
+  font-size: 0.7rem;
+  color: #2196f3;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  text-align: left;
+  margin-top: -4px;
+}
+
+body.dark-mode .preserved-values-indicator {
+  color: #64b5f6;
+}
+
+.preserved-values-indicator i {
+  font-size: 0.7rem;
 }
 
 .modal-content {
