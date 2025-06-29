@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useCurrency } from '../context/CurrencyContext';
+import { useCategories } from '../context/CategoryContext';
+import { usePaymentMethods } from '../context/PaymentMethodContext';
 
 const TransactionItem = ({ transaction, onDelete, onEdit, onDuplicate }) => {
   const { currency } = useCurrency();
+  const { expenseCategories, incomeCategories } = useCategories();
+  const { expensePaymentMethods, incomePaymentMethods } = usePaymentMethods();
   const [showActions, setShowActions] = useState(false);
   const actionsRef = useRef(null);
   const itemRef = useRef(null);
@@ -26,38 +30,34 @@ const TransactionItem = ({ transaction, onDelete, onEdit, onDuplicate }) => {
       document.removeEventListener('mousedown', handleOutsideClick);
     };
   }, [showActions]);
-  // Icons for different categories
-  const getCategoryIcon = (category) => {
-    switch (category.toLowerCase()) {
-      case 'food':
-        return <i className="fas fa-utensils"></i>;
-      case 'transport':
-        return <i className="fas fa-car"></i>;
-      case 'entertainment':
-        return <i className="fas fa-film"></i>;
-      case 'shopping':
-        return <i className="fas fa-shopping-bag"></i>;
-      case 'utilities':
-        return <i className="fas fa-home"></i>;
-      default:
-        return <i className="fas fa-money-bill"></i>;
+  // Get category icon from category contexts
+  const getCategoryIcon = (categoryName) => {
+    // Find the category in the appropriate list based on transaction type
+    const categories = transaction.type === 'expense' ? expenseCategories : incomeCategories;
+    const category = categories.find(cat => cat.name === categoryName);
+    
+    // If found, use the icon from the category, otherwise use a default
+    if (category && category.icon) {
+      return <i className={`fas ${category.icon}`}></i>;
     }
+    
+    // Default icon if category not found
+    return <i className="fas fa-money-bill"></i>;
   };
 
-  // Payment method icons
-  const getPaymentIcon = (method) => {
-    switch (method.toLowerCase()) {
-      case 'credit card':
-        return <i className="fas fa-credit-card"></i>;
-      case 'cash':
-        return <i className="fas fa-money-bill-wave"></i>;
-      case 'digital wallet':
-        return <i className="fas fa-wallet"></i>;
-      case 'bank transfer':
-        return <i className="fas fa-university"></i>;
-      default:
-        return <i className="fas fa-money-check"></i>;
+  // Get payment method icon from payment method contexts
+  const getPaymentIcon = (methodName) => {
+    // Find the payment method in the appropriate list based on transaction type
+    const paymentMethods = transaction.type === 'expense' ? expensePaymentMethods : incomePaymentMethods;
+    const method = paymentMethods.find(m => m.name === methodName);
+    
+    // If found, use the icon from the payment method, otherwise use a default
+    if (method && method.icon) {
+      return <i className={`fas ${method.icon}`}></i>;
     }
+    
+    // Default icon if payment method not found
+    return <i className="fas fa-money-check"></i>;
   };
 
   const handleClick = () => {
