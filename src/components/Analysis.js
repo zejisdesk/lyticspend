@@ -9,6 +9,11 @@ import MultiSelectDropdown from './MultiSelectDropdown';
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
+// Disable animations globally for better performance in PWA mode
+ChartJS.defaults.animation = false;
+ChartJS.defaults.animations = false;
+ChartJS.defaults.transitions = false;
+
 const Analysis = ({ transactions, selectedCategory = null, selectedPaymentMethod = null }) => {
   const { currency } = useCurrency();
   const { expenseCategories: categories } = useCategories();
@@ -179,6 +184,9 @@ const Analysis = ({ transactions, selectedCategory = null, selectedPaymentMethod
       },
     },
     cutout: '70%',
+    animation: {
+      duration: 0 // Disable animations completely
+    },
   };
 
   // Bar chart config
@@ -218,6 +226,9 @@ const Analysis = ({ transactions, selectedCategory = null, selectedPaymentMethod
           }
         }
       },
+    },
+    animation: {
+      duration: 0 // Disable animations completely
     },
   };
 
