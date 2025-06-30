@@ -98,10 +98,11 @@ const MultiSelectDropdown = ({ options, selectedValues = [], onChange, placehold
                     key={index} 
                     className={`custom-dropdown-option ${isSelected ? 'selected' : ''}`}
                     onClick={() => handleSelect(option)}
+                    style={{ justifyContent: 'space-between' }}
                   >
                     <div className="option-content">
                       {icon && <i className={`fas ${icon}`}></i>}
-                      <span>{option}</span>
+                      <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{option}</span>
                     </div>
                     {isSelected && <i className="fas fa-check check-icon"></i>}
                   </div>

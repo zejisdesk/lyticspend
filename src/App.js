@@ -263,7 +263,7 @@ const AppContent = () => {
         />;
       case 'reports':
         return <Reports 
-          transactions={monthFilteredTransactions} 
+          transactions={transactions} 
           selectedMonthYear={selectedMonthYear} 
         />;
       case 'settings':

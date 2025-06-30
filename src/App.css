@@ -1559,6 +1559,23 @@ body.dark-mode .report-card-amount {
   transition: color 0.3s ease;
 }
 
+.month-over-month-container {
+  display: flex;
+}
+
+.month-total {
+  color: #333;
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: .5rem;
+}
+
+.month-detail {
+  color: #6b7280;
+  font-size: .8rem;
+  line-height: 1.4;
+}
+
 .expense-change {
   color: #ef4444;
   font-weight: 600;
@@ -2736,6 +2753,13 @@ body.dark-mode .chart-container {
 }
 
 /* Analysis tab summary cards */
+.analysis-section .summary-cards {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 .analysis-section .summary-card {
   flex: 1;
   min-width: 150px;
@@ -3377,6 +3401,7 @@ body.dark-mode .month-details {
 .multi-select-dropdown .check-icon {
   color: var(--primary-color);
   margin-left: auto;
+  flex-shrink: 0;
 }
 
 .option-content {
@@ -3384,6 +3409,10 @@ body.dark-mode .month-details {
   align-items: center;
   gap: 8px;
   text-align: left;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  justify-content: flex-start;
 }
 
 .multi-select-actions {
@@ -3479,6 +3508,8 @@ body.dark-mode .custom-dropdown-selected.placeholder {
   z-index: 1000;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   transition: background-color 0.3s ease, border-color 0.3s ease;
+  box-sizing: border-box;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -3549,9 +3580,10 @@ body.dark-mode .icon-dropdown .custom-dropdown-selected {
 }
 
 .icon-dropdown .custom-dropdown-option i {
+  font-size: 1.2rem;
+  margin-right: 10px;
   width: 24px;
   height: 24px;
-  margin-right: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -3616,6 +3648,9 @@ body.dark-mode .custom-dropdown-search input {
   justify-content: flex-start;
   text-align: left;
   transition: background-color 0.3s ease, color 0.3s ease;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 body.dark-mode .custom-dropdown-option {
@@ -3644,6 +3679,7 @@ body.dark-mode .custom-dropdown-option.selected {
   font-size: 1rem;
   width: 20px;
   text-align: center;
+  color: #0D6EFD;
 }
 
 .dropdown-selected-with-icon {

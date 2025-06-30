@@ -3,9 +3,16 @@ import { useCurrency } from '../context/CurrencyContext';
 import { useBudget } from '../context/BudgetContext';
 import { useCategories } from '../context/CategoryContext';
 import { usePaymentMethods } from '../context/PaymentMethodContext';
+import { parseMonthYear } from '../utils/financialUtils';
 import DownloadReportModal from './DownloadReportModal';
 
 const Reports = ({ transactions, selectedMonthYear }) => {
+  // We need all transactions, not just the ones filtered by month
+  // This is because we need to show data for both current and previous month
+  
+  // Debug logging
+  console.log('Reports component - All transactions:', transactions);
+  console.log('Reports component - Selected month-year:', selectedMonthYear);
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const { currency } = useCurrency();
   const { monthlyBudget } = useBudget();
@@ -86,30 +93,63 @@ const Reports = ({ transactions, selectedMonthYear }) => {
   
   // Get month-over-month data
   const getMonthlyData = () => {
-    const now = new Date();
-    const currentMonth = now.getMonth();
+    // Parse the selectedMonthYear which is in format "June 2025"
+    const currentDate = parseMonthYear(selectedMonthYear);
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    const currentMonthName = currentDate.toLocaleString('default', { month: 'long' });
+    
+    // Calculate previous month
     const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const previousYear = previousMonth === 11 && currentMonth === 0 ? currentYear - 1 : currentYear;
     
-    const currentMonthName = new Date(now.getFullYear(), currentMonth).toLocaleString('default', { month: 'long' });
-    const previousMonthName = new Date(now.getFullYear(), previousMonth).toLocaleString('default', { month: 'long' });
+    // Get previous month name
+    const previousDate = new Date(previousYear, previousMonth, 1);
+    const previousMonthName = previousDate.toLocaleString('default', { month: 'long' });
     
-    const currentMonthExpenses = transactions
-      .filter(t => {
-        const date = new Date(t.date);
-        return t.type === 'expense' && date.getMonth() === currentMonth;
-      })
-      .reduce((sum, t) => sum + t.amount, 0);
+    console.log('Current date from parseMonthYear:', currentDate);
+    console.log('Selected month-year:', selectedMonthYear);
+    console.log('Current month/year:', currentMonth, currentYear, currentMonthName);
+    console.log('Previous month/year:', previousMonth, previousYear, previousMonthName);
     
-    const previousMonthExpenses = transactions
-      .filter(t => {
-        const date = new Date(t.date);
-        return t.type === 'expense' && date.getMonth() === previousMonth;
-      })
-      .reduce((sum, t) => sum + t.amount, 0);
+    // Filter and calculate expenses for current month
+    const currentMonthExpenseTransactions = [];
+    const previousMonthExpenseTransactions = [];
+    
+    // Process each transaction
+    transactions.forEach(transaction => {
+      if (!transaction.date || transaction.type !== 'expense') return;
+      
+      // Parse the transaction date
+      const transactionDate = new Date(transaction.date);
+      const transactionMonth = transactionDate.getMonth();
+      const transactionYear = transactionDate.getFullYear();
+      
+      // Check if transaction belongs to current month
+      if (transactionMonth === currentMonth && transactionYear === currentYear) {
+        currentMonthExpenseTransactions.push(transaction);
+        console.log('Current month transaction:', transaction.description, transaction.amount, transaction.date);
+      }
+      
+      // Check if transaction belongs to previous month
+      if (transactionMonth === previousMonth && transactionYear === previousYear) {
+        previousMonthExpenseTransactions.push(transaction);
+        console.log('Previous month transaction:', transaction.description, transaction.amount, transaction.date);
+      }
+    });
+    
+    // Calculate total expenses for each month
+    const currentMonthExpenses = currentMonthExpenseTransactions.reduce((sum, t) => sum + t.amount, 0);
+    const previousMonthExpenses = previousMonthExpenseTransactions.reduce((sum, t) => sum + t.amount, 0);
+    
+    console.log('Current month expense transactions:', currentMonthExpenseTransactions);
+    console.log('Previous month expense transactions:', previousMonthExpenseTransactions);
+    console.log('Total current month expenses:', currentMonthExpenses);
+    console.log('Total previous month expenses:', previousMonthExpenses);
     
     // Calculate daily averages
-    const daysInCurrentMonth = new Date(now.getFullYear(), currentMonth + 1, 0).getDate();
-    const daysInPreviousMonth = new Date(now.getFullYear(), previousMonth + 1, 0).getDate();
+    const daysInCurrentMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+    const daysInPreviousMonth = new Date(previousYear, previousMonth + 1, 0).getDate();
     
     const currentDailyAvg = currentMonthExpenses / daysInCurrentMonth;
     const previousDailyAvg = previousMonthExpenses / daysInPreviousMonth;
@@ -122,20 +162,26 @@ const Reports = ({ transactions, selectedMonthYear }) => {
         const date = new Date(t.date);
         const day = date.getDate();
         const month = date.getMonth();
+        const year = date.getFullYear();
         
-        if (month === currentMonth || month === previousMonth) {
-          const key = `${month}-${day}`;
+        // Check if this transaction belongs to either the current or previous month
+        const isCurrentMonth = month === currentMonth && year === currentYear;
+        const isPreviousMonth = month === previousMonth && year === previousYear;
+        
+        if (isCurrentMonth || isPreviousMonth) {
+          // Use year-month-day as key to avoid conflicts between different years
+          const key = `${year}-${month}-${day}`;
           if (!dailySpending[key]) dailySpending[key] = 0;
           dailySpending[key] += t.amount;
         }
       });
     
     const currentHighestDay = Object.entries(dailySpending)
-      .filter(([key]) => key.startsWith(`${currentMonth}-`))
+      .filter(([key]) => key.startsWith(`${currentYear}-${currentMonth}-`))
       .sort((a, b) => b[1] - a[1])[0];
     
     const previousHighestDay = Object.entries(dailySpending)
-      .filter(([key]) => key.startsWith(`${previousMonth}-`))
+      .filter(([key]) => key.startsWith(`${previousYear}-${previousMonth}-`))
       .sort((a, b) => b[1] - a[1])[0];
     
     return {
@@ -143,13 +189,13 @@ const Reports = ({ transactions, selectedMonthYear }) => {
         month: currentMonthName,
         total: currentMonthExpenses,
         daily: currentDailyAvg,
-        highestDay: currentHighestDay ? currentHighestDay[0].split('-')[1] : 'N/A'
+        highestDay: currentHighestDay ? currentHighestDay[0].split('-')[2] : 'N/A'
       },
       previous: {
         month: previousMonthName,
         total: previousMonthExpenses,
         daily: previousDailyAvg,
-        highestDay: previousHighestDay ? previousHighestDay[0].split('-')[1] : 'N/A'
+        highestDay: previousHighestDay ? previousHighestDay[0].split('-')[2] : 'N/A'
       }
     };
   };
@@ -174,8 +220,98 @@ const Reports = ({ transactions, selectedMonthYear }) => {
   
   // Get category colors
   const getCategoryColor = (index) => {
-    const colors = ['#3b82f6', '#22c55e', '#eab308', '#8b5cf6', '#ef4444'];
+    const colors = ['#4CAF50', '#2196F3', '#FF9800', '#E91E63', '#9C27B0'];
     return colors[index % colors.length];
+  };
+  
+  // Month over Month comparison section
+  const renderMonthOverMonth = () => {
+    const monthlyData = getMonthlyData();
+    
+    // Debug logging for the rendered values
+    console.log('Month over Month data:', monthlyData);
+    
+    return (
+      <div className="report-card">
+        <div className="report-card-title">Month over Month</div>
+        <div className="month-over-month-container">
+          <div className="month-column">
+            <div className="month-name">{monthlyData.previous.month}</div>
+            <div className="month-total">{currency.symbol}{monthlyData.previous.total.toFixed(0)}</div>
+            <div className="month-detail">Daily: {currency.symbol}{monthlyData.previous.daily.toFixed(0)}</div>
+            <div className="month-detail">Highest: {monthlyData.previous.highestDay ? `${currency.symbol}${monthlyData.previous.total.toFixed(0)} on ${monthlyData.previous.highestDay}` : 'N/A'}</div>
+          </div>
+          <div className="month-column">
+            <div className="month-name">{monthlyData.current.month}</div>
+            <div className="month-total">{currency.symbol}{monthlyData.current.total.toFixed(0)}</div>
+            <div className="month-detail">Daily: {currency.symbol}{monthlyData.current.daily.toFixed(0)}</div>
+            <div className="month-detail">Highest: {monthlyData.current.highestDay ? `${currency.symbol}${monthlyData.current.total.toFixed(0)} on ${monthlyData.current.highestDay}` : 'N/A'}</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+  
+  // Debug function to clear localStorage and reload
+  const clearAndReload = () => {
+    localStorage.clear();
+    window.location.reload();
+  };
+  
+  // Debug function to add sample transactions
+  const addSampleTransactions = () => {
+    // Create sample transactions for June and July 2025
+    const sampleTransactions = [
+      // June 2025 transactions
+      {
+        id: 'june1',
+        description: 'Groceries June',
+        amount: 2500,
+        date: '2025-06-15', // Format: YYYY-MM-DD
+        category: 'Food',
+        paymentMethod: 'Credit Card',
+        type: 'expense'
+      },
+      {
+        id: 'june2',
+        description: 'Rent June',
+        amount: 15000,
+        date: '2025-06-05',
+        category: 'Housing',
+        paymentMethod: 'Bank Transfer',
+        type: 'expense'
+      },
+      
+      // July 2025 transactions
+      {
+        id: 'july1',
+        description: 'Groceries July',
+        amount: 3000,
+        date: '2025-07-10',
+        category: 'Food',
+        paymentMethod: 'Credit Card',
+        type: 'expense'
+      },
+      {
+        id: 'july2',
+        description: 'Rent July',
+        amount: 15000,
+        date: '2025-07-05',
+        category: 'Housing',
+        paymentMethod: 'Bank Transfer',
+        type: 'expense'
+      }
+    ];
+    
+    // Clear existing transactions first
+    localStorage.removeItem('transactions');
+    
+    // Save sample transactions to localStorage
+    localStorage.setItem('transactions', JSON.stringify(sampleTransactions));
+    console.log('Sample transactions added:', sampleTransactions);
+    
+    // Reload the page
+    window.location.reload();
   };
   
   return (
@@ -292,27 +428,7 @@ const Reports = ({ transactions, selectedMonthYear }) => {
       </div>
       
       {/* Month over Month */}
-      <div className="report-card">
-        <div className="report-card-title">Month over Month</div>
-        <div className="month-comparison chart-container" id="month-comparison-chart">
-          <div className="month-column">
-            <div className="month-name">{monthlyData.previous.month}</div>
-            <div className="month-amount">{currency.symbol}{monthlyData.previous.total.toFixed(0)}</div>
-            <div className="month-details">
-              <div>Daily: {currency.symbol}{monthlyData.previous.daily.toFixed(0)}</div>
-              <div>Highest: {monthlyData.previous.highestDay === 'N/A' ? 'N/A' : `${monthlyData.previous.highestDay}th`}</div>
-            </div>
-          </div>
-          <div className="month-column">
-            <div className="month-name">{monthlyData.current.month}</div>
-            <div className="month-amount">{currency.symbol}{monthlyData.current.total.toFixed(0)}</div>
-            <div className="month-details">
-              <div>Daily: {currency.symbol}{monthlyData.current.daily.toFixed(0)}</div>
-              <div>Highest: {monthlyData.current.highestDay === 'N/A' ? 'N/A' : `${monthlyData.current.highestDay}th`}</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      {renderMonthOverMonth()}
       
       {/* Download Report Button - Disabled when no transactions are available */}
       {transactions.length > 0 ? (

@@ -37,11 +37,78 @@ const useTransactions = () => {
     setIsLoaded(true);
   }, []);
   
-  // Initialize with empty transactions array
+  // Initialize with sample transactions for testing
   const loadSampleData = () => {
-    const emptyTransactions = [];
-    setTransactions(emptyTransactions);
-    localStorage.setItem('transactions', JSON.stringify(emptyTransactions));
+    // Since we know it's July 2025 based on the current date in the app
+    const currentYear = 2025;
+    const juneMonth = 5; // June is 5 (0-indexed)
+    const julyMonth = 6; // July is 6 (0-indexed)
+    
+    // Create sample transactions for June and July 2025
+    const sampleTransactions = [
+      // June 2025 transactions
+      {
+        id: '1',
+        description: 'Groceries June',
+        amount: 2500,
+        date: `2025-06-15`, // Format: YYYY-MM-DD
+        category: 'Food',
+        paymentMethod: 'Credit Card',
+        type: 'expense'
+      },
+      {
+        id: '2',
+        description: 'Rent June',
+        amount: 15000,
+        date: `2025-06-05`,
+        category: 'Housing',
+        paymentMethod: 'Bank Transfer',
+        type: 'expense'
+      },
+      {
+        id: '3',
+        description: 'Salary June',
+        amount: 50000,
+        date: `2025-06-01`,
+        category: 'Salary',
+        paymentMethod: 'Bank Transfer',
+        type: 'income'
+      },
+      
+      // July 2025 transactions
+      {
+        id: '4',
+        description: 'Groceries July',
+        amount: 3000,
+        date: `2025-07-10`,
+        category: 'Food',
+        paymentMethod: 'Credit Card',
+        type: 'expense'
+      },
+      {
+        id: '5',
+        description: 'Rent July',
+        amount: 15000,
+        date: `2025-07-05`,
+        category: 'Housing',
+        paymentMethod: 'Bank Transfer',
+        type: 'expense'
+      },
+      {
+        id: '6',
+        description: 'Salary July',
+        amount: 50000,
+        date: `2025-07-01`,
+        category: 'Salary',
+        paymentMethod: 'Bank Transfer',
+        type: 'income'
+      }
+    ];
+    
+    console.log('Generated sample transactions:', sampleTransactions);
+    setTransactions(sampleTransactions);
+    localStorage.setItem('transactions', JSON.stringify(sampleTransactions));
+    console.log('Sample transactions loaded:', sampleTransactions);
   };
   
   // Update localStorage and calculate financial summary whenever transactions change
