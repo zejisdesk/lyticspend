@@ -353,7 +353,7 @@ body.dark-mode .filters .custom-dropdown-selected {
   background-color: #ffffff;
   border-radius: 0;
   overflow: visible; /* Changed from hidden to allow dropdowns to be visible */
-  padding-bottom: 50px; /* Added padding to ensure last item's dropdown is visible */
+  padding-bottom: 100px; /* Increased padding to ensure last item's dropdown is visible and add space at the end of lists */
   transition: background-color 0.3s ease;
 }
 

@@ -186,8 +186,13 @@ const AppContent = () => {
     setShowEditModal(false);
   };
   
-  // First filter transactions by selected month and year
+  // First filter transactions by the selected month-year
   const monthFilteredTransactions = filterTransactionsByMonthYear(transactions, selectedMonthYear);
+  
+  // Helper function to filter transactions by type
+  const filterByType = (transactions, type) => {
+    return transactions.filter(transaction => transaction.type === type);
+  };
   
   // Then filter by transaction type based on active tab
   const filteredTransactions = monthFilteredTransactions.filter(transaction => {
@@ -221,7 +226,7 @@ const AppContent = () => {
             />
             <div className="transaction-container">
               <TransactionList 
-                transactions={monthFilteredTransactions} 
+                transactions={filterByType(monthFilteredTransactions, 'expense')} 
                 categoryFilter={categoryFilter} 
                 paymentMethodFilter={paymentMethodFilter}
                 onDeleteTransaction={handleDeleteTransaction}
@@ -241,7 +246,7 @@ const AppContent = () => {
             />
             <div className="transaction-container">
               <TransactionList 
-                transactions={monthFilteredTransactions} 
+                transactions={filterByType(monthFilteredTransactions, 'income')} 
                 categoryFilter="all" 
                 paymentMethodFilter="all"
                 onDeleteTransaction={handleDeleteTransaction}
