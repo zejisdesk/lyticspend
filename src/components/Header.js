@@ -33,19 +33,19 @@ const Header = ({ income, expenses, balance, activeTab, transactions, selectedMo
           <div className="summary-section">
             <div className="summary-row">
               <p className="summary-label">Income:</p>
-              <p className="summary-amount income">{currency.symbol}{income.toFixed(2)}</p>
+              <p className="summary-amount" style={{ color: '#4CAF50' }}>{currency.symbol}{income.toFixed(2)}</p>
             </div>
           </div>
           <div className="summary-section">
             <div className="summary-row">
               <p className="summary-label">Expenses:</p>
-              <p className="summary-amount expense">-{currency.symbol}{Math.abs(expenses).toFixed(2)}</p>
+              <p className="summary-amount" style={{ color: '#F44336' }}>-{currency.symbol}{Math.abs(expenses).toFixed(2)}</p>
             </div>
           </div>
           <div className="summary-section">
             <div className="summary-row">
               <p className="summary-label">Balance:</p>
-              <p className="summary-amount">{currency.symbol}{balance.toFixed(2)}</p>
+              <p className="summary-amount" style={{ color: balance < 0 ? '#F44336' : '#4CAF50' }}>{currency.symbol}{balance.toFixed(2)}</p>
             </div>
           </div>
         </div>
