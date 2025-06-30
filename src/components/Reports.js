@@ -267,93 +267,10 @@ const Reports = ({ transactions, selectedMonthYear }) => {
     );
   };
   
-  // Debug function to clear localStorage and reload
-  const clearAndReload = () => {
-    localStorage.clear();
-    window.location.reload();
-  };
-  
-  // Debug function to add sample transactions
-  const addSampleTransactions = () => {
-    // Create sample transactions for June and July 2025
-    const sampleTransactions = [
-      // June 2025 transactions
-      {
-        id: 'june1',
-        description: 'Groceries June',
-        amount: 2500,
-        date: '2025-06-15', // Format: YYYY-MM-DD
-        category: 'Food',
-        paymentMethod: 'Credit Card',
-        type: 'expense'
-      },
-      {
-        id: 'june2',
-        description: 'Rent June',
-        amount: 15000,
-        date: '2025-06-05',
-        category: 'Housing',
-        paymentMethod: 'Bank Transfer',
-        type: 'expense'
-      },
-      
-      // July 2025 transactions
-      {
-        id: 'july1',
-        description: 'Groceries July',
-        amount: 3000,
-        date: '2025-07-10',
-        category: 'Food',
-        paymentMethod: 'Credit Card',
-        type: 'expense'
-      },
-      {
-        id: 'july2',
-        description: 'Rent July',
-        amount: 15000,
-        date: '2025-07-05',
-        category: 'Housing',
-        paymentMethod: 'Bank Transfer',
-        type: 'expense'
-      }
-    ];
-    
-    // Get existing transactions
-    const existingTransactions = JSON.parse(localStorage.getItem('transactions') || '[]');
-    
-    // Filter out any existing sample transactions with the same IDs
-    const filteredExistingTransactions = existingTransactions.filter(t => 
-      !['june1', 'june2', 'july1', 'july2'].includes(t.id)
-    );
-    
-    // Add sample transactions
-    const updatedTransactions = [...filteredExistingTransactions, ...sampleTransactions];
-    
-    // Save to localStorage
-    localStorage.setItem('transactions', JSON.stringify(updatedTransactions));
-    console.log('Sample transactions added:', sampleTransactions);
-    console.log('All transactions after update:', updatedTransactions);
-    
-    // Reload the page
-    window.location.reload();
-  };
+  // No debug functions in production code
   
   return (
     <div className="reports-container" style={{ paddingBottom: '5rem' }}>
-      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-        <button 
-          onClick={clearAndReload}
-          style={{ padding: '5px 10px', backgroundColor: '#f0f0f0', border: '1px solid #ccc' }}
-        >
-          Debug: Reset Data
-        </button>
-        <button 
-          onClick={addSampleTransactions}
-          style={{ padding: '5px 10px', backgroundColor: '#e0f0e0', border: '1px solid #ccc' }}
-        >
-          Debug: Add Sample Transactions
-        </button>
-      </div>
       {/* Total Expenses Summary */}
       <div className="report-card">
         <div className="report-card-title">Total Expenses</div>
