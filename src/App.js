@@ -10,7 +10,7 @@ import AddTransactionModal from './components/AddTransactionModal';
 import Navigation from './components/Navigation';
 import ConfirmationModal from './components/ConfirmationModal';
 import Reports from './components/Reports';
-import Analyse from './components/Analyse';
+import Analysis from './components/Analysis';
 import Settings from './components/Settings';
 import InitialCurrencyModal from './components/InitialCurrencyModal';
 import InstallPrompt from './components/InstallPrompt';
@@ -252,8 +252,8 @@ const AppContent = () => {
             </div>
           </>
         );
-      case 'analyse':
-        return <Analyse 
+      case 'analysis':
+        return <Analysis 
           transactions={monthFilteredTransactions} 
         />;
       case 'reports':

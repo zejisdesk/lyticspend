@@ -20,11 +20,11 @@ const Navigation = ({ activeTab, onTabChange }) => {
       </div>
       
       <div 
-        className={`nav-item ${activeTab === 'analyse' ? 'active' : ''}`}
-        onClick={() => onTabChange('analyse')}
+        className={`nav-item ${activeTab === 'analysis' ? 'active' : ''}`}
+        onClick={() => onTabChange('analysis')}
       >
         <div className="nav-icon"><i className="fas fa-search-dollar"></i></div>
-        <div className="nav-label">Analyse</div>
+        <div className="nav-label">Analysis</div>
       </div>
       
       <div 

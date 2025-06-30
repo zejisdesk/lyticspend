@@ -1,14 +1,14 @@
-import React from 'react';
-import { useCurrency } from '../context/CurrencyContext';
+import React, { useContext } from 'react';
+import { CurrencyContext } from '../context/CurrencyContext';
 
-const Analyse = ({ transactions }) => {
-  const { currency } = useCurrency();
+const Analysis = ({ transactions }) => {
+  const { currency } = useContext(CurrencyContext);
 
   return (
-    <div className="analyse-container">
-      <h2>Analyse Your Spending</h2>
+    <div className="analysis-container">
+      <h2>Analyzing Your Spending</h2>
       
-      <div className="analyse-section">
+      <div className="analysis-section">
         <h3>Spending Insights</h3>
         <p>This section will provide detailed analysis of your spending patterns.</p>
         
@@ -30,7 +30,7 @@ const Analyse = ({ transactions }) => {
         </div>
       </div>
       
-      <div className="analyse-section">
+      <div className="analysis-section">
         <h3>Coming Soon</h3>
         <ul className="feature-list">
           <li><i className="fas fa-check-circle"></i> Category spending breakdown</li>
@@ -44,4 +44,4 @@ const Analyse = ({ transactions }) => {
   );
 };
 
-export default Analyse;
+export default Analysis;
