@@ -10,6 +10,15 @@ const Reports = ({ transactions, selectedMonthYear }) => {
   // We need all transactions, not just the ones filtered by month
   // This is because we need to show data for both current and previous month
   
+  // Add state to force re-render when selectedMonthYear changes
+  const [reportKey, setReportKey] = useState(selectedMonthYear);
+  
+  // Update report data when selectedMonthYear changes
+  useEffect(() => {
+    console.log('Selected month-year changed to:', selectedMonthYear);
+    setReportKey(selectedMonthYear); // Force re-render with new key
+  }, [selectedMonthYear]);
+  
   // Debug logging
   console.log('Reports component - All transactions:', transactions);
   console.log('Reports component - Selected month-year:', selectedMonthYear);
@@ -18,13 +27,20 @@ const Reports = ({ transactions, selectedMonthYear }) => {
   const { monthlyBudget } = useBudget();
   const { expenseCategories, incomeCategories } = useCategories();
   const { expensePaymentMethods, incomePaymentMethods } = usePaymentMethods();
-  // Calculate total expenses
-  const totalExpenses = transactions
+  // Import filterTransactionsByMonthYear once at the top level
+  const { filterTransactionsByMonthYear } = require('../utils/financialUtils');
+  
+  // Filter transactions by the selected month-year
+  const monthFilteredTransactions = filterTransactionsByMonthYear(transactions, selectedMonthYear);
+  console.log('Month filtered transactions:', monthFilteredTransactions);
+  
+  // Calculate total expenses for the selected month
+  const totalExpenses = monthFilteredTransactions
     .filter(t => t.type === 'expense')
     .reduce((sum, t) => sum + t.amount, 0);
     
-  // Calculate total income
-  const totalIncome = transactions
+  // Calculate total income for the selected month
+  const totalIncome = monthFilteredTransactions
     .filter(t => t.type === 'income')
     .reduce((sum, t) => sum + t.amount, 0);
   
@@ -32,7 +48,10 @@ const Reports = ({ transactions, selectedMonthYear }) => {
   const calculateCategoryData = () => {
     const categoryData = {};
     
-    transactions.forEach(transaction => {
+    // Use the already filtered transactions
+    console.log('Using filtered transactions for category data:', monthFilteredTransactions);
+    
+    monthFilteredTransactions.forEach(transaction => {
       if (transaction.type === 'expense') {
         if (!categoryData[transaction.category]) {
           categoryData[transaction.category] = 0;
@@ -61,7 +80,10 @@ const Reports = ({ transactions, selectedMonthYear }) => {
   const calculateFrequentCategories = () => {
     const categoryFrequency = {};
     
-    transactions.forEach(transaction => {
+    // Use the already filtered transactions
+    console.log('Using filtered transactions for frequent categories:', monthFilteredTransactions);
+    
+    monthFilteredTransactions.forEach(transaction => {
       if (transaction.type === 'expense') {
         if (!categoryFrequency[transaction.category]) {
           categoryFrequency[transaction.category] = {
@@ -340,7 +362,7 @@ const Reports = ({ transactions, selectedMonthYear }) => {
                   ></div>
                 </div>
                 <div className="category-percentage">
-                  {Math.round((item.count / transactions.filter(t => t.type === 'expense').length) * 100)}% of total
+                  {Math.round((item.count / monthFilteredTransactions.filter(t => t.type === 'expense').length) * 100)}% of total
                 </div>
               </div>
             </div>
