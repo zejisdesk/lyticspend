@@ -1143,7 +1143,15 @@ export const generatePDFReport = (data, currencyCode, reportType = 'full') => {
       </head>
       <body>
         <div class="report-container">
-          <div class="no-print" style="text-align: right; padding: 15px 20px; background-color: transparent;">
+          <div class="no-print" style="display: flex; justify-content: space-between; padding: 15px 20px; background-color: transparent;">
+            <div id="pwa-back-button" style="display: none;">
+              <button onclick="window.location.href = '/';" style="background-color: #4CAF50; color: white; border: none; border-radius: 4px; padding: 8px 16px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                  <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+                </svg>
+                Back to App
+              </button>
+            </div>
             <button class="print-button" onclick="window.print();" style="background-color: #3b82f6; color: white; border: none; border-radius: 4px; padding: 8px 16px; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                 <path d="M5 1a2 2 0 0 0-2 2v1h10V3a2 2 0 0 0-2-2H5zm6 8H5a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-3a1 1 0 0 0-1-1z"/>
@@ -1341,13 +1349,24 @@ export const generatePDFReport = (data, currencyCode, reportType = 'full') => {
             <div>Report Generated: ${new Date().toLocaleString()}</div>
             <div>Page 1 of 1</div>
           </div>
-          
-          <!-- Print button moved to top of page -->
         </div>
         
         <script>
-          // Auto-focus the window
+          // Focus the window for printing
           window.focus();
+          
+          // Check if the app is running as a PWA
+          function isPWA() {
+            return window.matchMedia('(display-mode: standalone)').matches || 
+                   window.navigator.standalone || 
+                   document.referrer.includes('android-app://') ||
+                   window.location.href.includes('?pwa=true');
+          }
+          
+          // Show back button if running as PWA
+          if (isPWA()) {
+            document.getElementById('pwa-back-button').style.display = 'block';
+          }
         </script>
       </body>
       </html>
