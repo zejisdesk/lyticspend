@@ -184,18 +184,31 @@ const Reports = ({ transactions, selectedMonthYear }) => {
       .filter(([key]) => key.startsWith(`${previousYear}-${previousMonth}-`))
       .sort((a, b) => b[1] - a[1])[0];
     
+    // Format the highest day data
+    const currentHighestDayInfo = currentHighestDay ? {
+      day: currentHighestDay[0].split('-')[2],
+      amount: currentHighestDay[1]
+    } : null;
+    
+    const previousHighestDayInfo = previousHighestDay ? {
+      day: previousHighestDay[0].split('-')[2],
+      amount: previousHighestDay[1]
+    } : null;
+    
     return {
       current: {
         month: currentMonthName,
         total: currentMonthExpenses,
         daily: currentDailyAvg,
-        highestDay: currentHighestDay ? currentHighestDay[0].split('-')[2] : 'N/A'
+        highestDay: currentHighestDayInfo ? currentHighestDayInfo.day : 'N/A',
+        highestAmount: currentHighestDayInfo ? currentHighestDayInfo.amount : 0
       },
       previous: {
         month: previousMonthName,
         total: previousMonthExpenses,
         daily: previousDailyAvg,
-        highestDay: previousHighestDay ? previousHighestDay[0].split('-')[2] : 'N/A'
+        highestDay: previousHighestDayInfo ? previousHighestDayInfo.day : 'N/A',
+        highestAmount: previousHighestDayInfo ? previousHighestDayInfo.amount : 0
       }
     };
   };
@@ -231,6 +244,8 @@ const Reports = ({ transactions, selectedMonthYear }) => {
     // Debug logging for the rendered values
     console.log('Month over Month data:', monthlyData);
     
+    // Ensure we're displaying the months in the correct order
+    // Previous month on the left, current month on the right
     return (
       <div className="report-card">
         <div className="report-card-title">Month over Month</div>
@@ -239,13 +254,13 @@ const Reports = ({ transactions, selectedMonthYear }) => {
             <div className="month-name">{monthlyData.previous.month}</div>
             <div className="month-total">{currency.symbol}{monthlyData.previous.total.toFixed(0)}</div>
             <div className="month-detail">Daily: {currency.symbol}{monthlyData.previous.daily.toFixed(0)}</div>
-            <div className="month-detail">Highest: {monthlyData.previous.highestDay ? `${currency.symbol}${monthlyData.previous.total.toFixed(0)} on ${monthlyData.previous.highestDay}` : 'N/A'}</div>
+            <div className="month-detail">Highest: {monthlyData.previous.highestDay !== 'N/A' ? `${currency.symbol}${monthlyData.previous.highestAmount.toFixed(0)} on ${monthlyData.previous.highestDay}th` : 'N/A'}</div>
           </div>
           <div className="month-column">
             <div className="month-name">{monthlyData.current.month}</div>
             <div className="month-total">{currency.symbol}{monthlyData.current.total.toFixed(0)}</div>
             <div className="month-detail">Daily: {currency.symbol}{monthlyData.current.daily.toFixed(0)}</div>
-            <div className="month-detail">Highest: {monthlyData.current.highestDay ? `${currency.symbol}${monthlyData.current.total.toFixed(0)} on ${monthlyData.current.highestDay}` : 'N/A'}</div>
+            <div className="month-detail">Highest: {monthlyData.current.highestDay !== 'N/A' ? `${currency.symbol}${monthlyData.current.highestAmount.toFixed(0)} on ${monthlyData.current.highestDay}th` : 'N/A'}</div>
           </div>
         </div>
       </div>
@@ -303,12 +318,21 @@ const Reports = ({ transactions, selectedMonthYear }) => {
       }
     ];
     
-    // Clear existing transactions first
-    localStorage.removeItem('transactions');
+    // Get existing transactions
+    const existingTransactions = JSON.parse(localStorage.getItem('transactions') || '[]');
     
-    // Save sample transactions to localStorage
-    localStorage.setItem('transactions', JSON.stringify(sampleTransactions));
+    // Filter out any existing sample transactions with the same IDs
+    const filteredExistingTransactions = existingTransactions.filter(t => 
+      !['june1', 'june2', 'july1', 'july2'].includes(t.id)
+    );
+    
+    // Add sample transactions
+    const updatedTransactions = [...filteredExistingTransactions, ...sampleTransactions];
+    
+    // Save to localStorage
+    localStorage.setItem('transactions', JSON.stringify(updatedTransactions));
     console.log('Sample transactions added:', sampleTransactions);
+    console.log('All transactions after update:', updatedTransactions);
     
     // Reload the page
     window.location.reload();
@@ -316,6 +340,20 @@ const Reports = ({ transactions, selectedMonthYear }) => {
   
   return (
     <div className="reports-container" style={{ paddingBottom: '5rem' }}>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+        <button 
+          onClick={clearAndReload}
+          style={{ padding: '5px 10px', backgroundColor: '#f0f0f0', border: '1px solid #ccc' }}
+        >
+          Debug: Reset Data
+        </button>
+        <button 
+          onClick={addSampleTransactions}
+          style={{ padding: '5px 10px', backgroundColor: '#e0f0e0', border: '1px solid #ccc' }}
+        >
+          Debug: Add Sample Transactions
+        </button>
+      </div>
       {/* Total Expenses Summary */}
       <div className="report-card">
         <div className="report-card-title">Total Expenses</div>
