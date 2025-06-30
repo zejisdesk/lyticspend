@@ -10,6 +10,7 @@ import AddTransactionModal from './components/AddTransactionModal';
 import Navigation from './components/Navigation';
 import ConfirmationModal from './components/ConfirmationModal';
 import Reports from './components/Reports';
+import Analyse from './components/Analyse';
 import Settings from './components/Settings';
 import InitialCurrencyModal from './components/InitialCurrencyModal';
 import InstallPrompt from './components/InstallPrompt';
@@ -202,34 +203,26 @@ const AppContent = () => {
   
   // Determine which main content to show based on active tab
   const renderMainContent = () => {
-    
     switch (activeTab) {
       case 'expenses':
         return (
           <>
-            {/* Action buttons for adding transactions */}
             <ActionButtons 
               onAddExpense={() => setShowExpenseModal(true)} 
               onAddIncome={() => setShowIncomeModal(true)} 
             />
-            
-            {/* Filters for categories and payment methods */}
             <Filters 
+              categoryFilter={categoryFilter}
+              onCategoryFilterChange={setCategoryFilter}
+              paymentMethodFilter={paymentMethodFilter}
+              onPaymentMethodFilterChange={setPaymentMethodFilter}
               categories={categoryNames}
               paymentMethods={paymentMethodNames}
-              selectedCategory={categoryFilter}
-              selectedPaymentMethod={paymentMethodFilter}
-              onCategoryChange={setCategoryFilter}
-              onPaymentMethodChange={setPaymentMethodFilter}
             />
-            
-
-            
-            {/* Transaction list with bottom padding for floating button */}
-            <div className="transactions-wrapper">
+            <div className="transaction-container">
               <TransactionList 
-                transactions={filteredTransactions} 
-                categoryFilter={categoryFilter}
+                transactions={monthFilteredTransactions} 
+                categoryFilter={categoryFilter} 
                 paymentMethodFilter={paymentMethodFilter}
                 onDeleteTransaction={handleDeleteTransaction}
                 onEditTransaction={handleEditTransaction}
@@ -242,19 +235,14 @@ const AppContent = () => {
       case 'income':
         return (
           <>
-            {/* Floating Add Income button */}
-            <button 
-              className="floating-add-btn" 
-              onClick={() => setShowIncomeModal(true)}
-            >
-              <i className="fas fa-plus"></i>
-            </button>
-            
-            {/* Transaction list with bottom padding for floating button */}
-            <div className="income-transactions-wrapper">
+            <ActionButtons 
+              onAddExpense={() => setShowExpenseModal(true)} 
+              onAddIncome={() => setShowIncomeModal(true)} 
+            />
+            <div className="transaction-container">
               <TransactionList 
-                transactions={filteredTransactions} 
-                categoryFilter="all"
+                transactions={monthFilteredTransactions} 
+                categoryFilter="all" 
                 paymentMethodFilter="all"
                 onDeleteTransaction={handleDeleteTransaction}
                 onEditTransaction={handleEditTransaction}
@@ -264,6 +252,10 @@ const AppContent = () => {
             </div>
           </>
         );
+      case 'analyse':
+        return <Analyse 
+          transactions={monthFilteredTransactions} 
+        />;
       case 'reports':
         return <Reports 
           transactions={monthFilteredTransactions} 

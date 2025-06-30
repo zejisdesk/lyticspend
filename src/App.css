@@ -2598,6 +2598,88 @@ body.dark-mode .budget-input {
   cursor: not-allowed;
 }
 
+/* Analyse Styles */
+.analyse-container {
+  padding: 1rem;
+  margin-bottom: 70px;
+}
+
+.analyse-container h2 {
+  margin-bottom: 1.5rem;
+  color: var(--text-color);
+  text-align: center;
+}
+
+.analyse-section {
+  background-color: var(--card-bg-color);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+body.dark-mode .analyse-section {
+  background-color: #1e1e1e;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.analyse-section h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: var(--text-color);
+  font-size: 1.2rem;
+}
+
+.placeholder-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  margin: 2rem 0;
+}
+
+.placeholder-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 1.5rem;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+
+body.dark-mode .placeholder-item {
+  background-color: #2a2a2a;
+}
+
+.placeholder-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  color: #2196f3;
+}
+
+.feature-list {
+  list-style-type: none;
+  padding: 0;
+  margin: 1rem 0;
+}
+
+.feature-list li {
+  padding: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.feature-list li i {
+  color: #2196f3;
+}
+
+body.dark-mode .feature-list li i,
+body.dark-mode .placeholder-icon {
+  color: #64b5f6;
+}
+
 body.dark-mode .save-budget-button {
   background-color: #388E3C;
 }

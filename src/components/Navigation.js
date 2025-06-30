@@ -20,6 +20,14 @@ const Navigation = ({ activeTab, onTabChange }) => {
       </div>
       
       <div 
+        className={`nav-item ${activeTab === 'analyse' ? 'active' : ''}`}
+        onClick={() => onTabChange('analyse')}
+      >
+        <div className="nav-icon"><i className="fas fa-search-dollar"></i></div>
+        <div className="nav-label">Analyse</div>
+      </div>
+      
+      <div 
         className={`nav-item ${activeTab === 'reports' ? 'active' : ''}`}
         onClick={() => onTabChange('reports')}
       >
