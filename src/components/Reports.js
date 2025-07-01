@@ -10,13 +10,10 @@ const Reports = ({ transactions, selectedMonthYear }) => {
   // We need all transactions, not just the ones filtered by month
   // This is because we need to show data for both current and previous month
   
-  // Add state to force re-render when selectedMonthYear changes
-  const [reportKey, setReportKey] = useState(selectedMonthYear);
-  
   // Update report data when selectedMonthYear changes
   useEffect(() => {
     console.log('Selected month-year changed to:', selectedMonthYear);
-    setReportKey(selectedMonthYear); // Force re-render with new key
+    // Force re-render when selectedMonthYear changes
   }, [selectedMonthYear]);
   
   // Debug logging
@@ -25,8 +22,8 @@ const Reports = ({ transactions, selectedMonthYear }) => {
   const [showDownloadModal, setShowDownloadModal] = useState(false);
   const { currency } = useCurrency();
   const { monthlyBudget } = useBudget();
-  const { expenseCategories, incomeCategories } = useCategories();
-  const { expensePaymentMethods, incomePaymentMethods } = usePaymentMethods();
+  const { expenseCategories } = useCategories();
+  // Only using expenseCategories for now
   // Import filterTransactionsByMonthYear once at the top level
   const { filterTransactionsByMonthYear } = require('../utils/financialUtils');
   

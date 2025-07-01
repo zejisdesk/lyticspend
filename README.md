@@ -1,5 +1,7 @@
 # LyticSpend - Personal Finance Tracker
 
+**[https://lyticspend.online](https://lyticspend.online/)** - Try it out, it's free!
+
 LyticSpend is a modern, user-friendly personal finance tracking application built with React. It helps users track expenses and income, manage budgets, generate financial reports, and customize categories and payment methods.
 
 ![LyticSpend Logo](/public/app_logo.svg)

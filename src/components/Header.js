@@ -1,13 +1,18 @@
 import React from 'react';
 import { useCurrency } from '../context/CurrencyContext';
 import MonthYearPicker from './MonthYearPicker';
+import { filterTransactionsByMonthYear, calculateTotalIncome, calculateTotalExpenses, calculateBalance } from '../utils/financialUtils';
 
 const Header = ({ income, expenses, balance, activeTab, transactions, selectedMonthYear, onMonthYearChange }) => {
   const { currency } = useCurrency();
   
   // Filter transactions for the selected month-year
-  const { filterTransactionsByMonthYear } = require('../utils/financialUtils');
   const monthFilteredTransactions = filterTransactionsByMonthYear(transactions, selectedMonthYear);
+  
+  // Calculate filtered summary values
+  const filteredIncome = calculateTotalIncome(monthFilteredTransactions);
+  const filteredExpenses = calculateTotalExpenses(monthFilteredTransactions);
+  const filteredBalance = calculateBalance(monthFilteredTransactions);
   
   // Only render the summary card for the expenses tab and when there are transactions for the selected month
   const hasTransactionsForSelectedMonth = monthFilteredTransactions.length > 0;
@@ -33,19 +38,19 @@ const Header = ({ income, expenses, balance, activeTab, transactions, selectedMo
           <div className="summary-section">
             <div className="summary-row">
               <p className="summary-label">Income:</p>
-              <p className="summary-amount" style={{ color: '#4CAF50' }}>{currency.symbol}{income.toFixed(2)}</p>
+              <p className="summary-amount" style={{ color: '#4CAF50' }}>{currency.symbol}{filteredIncome.toFixed(2)}</p>
             </div>
           </div>
           <div className="summary-section">
             <div className="summary-row">
               <p className="summary-label">Expenses:</p>
-              <p className="summary-amount" style={{ color: '#F44336' }}>-{currency.symbol}{Math.abs(expenses).toFixed(2)}</p>
+              <p className="summary-amount" style={{ color: '#F44336' }}>-{currency.symbol}{Math.abs(filteredExpenses).toFixed(2)}</p>
             </div>
           </div>
           <div className="summary-section">
             <div className="summary-row">
               <p className="summary-label">Balance:</p>
-              <p className="summary-amount" style={{ color: balance < 0 ? '#F44336' : '#4CAF50' }}>{currency.symbol}{balance.toFixed(2)}</p>
+              <p className="summary-amount" style={{ color: filteredBalance < 0 ? '#F44336' : '#4CAF50' }}>{currency.symbol}{filteredBalance.toFixed(2)}</p>
             </div>
           </div>
         </div>
